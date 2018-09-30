@@ -167,40 +167,8 @@ void test_registry()
     std::cout << myView3.get<StringComponent>(e2)->name << std::endl;
 }
 
-//template<int... Ks>
-//struct Indexer
-//{
-//    template<int N>
-//    struct GetIndex {
-//        static int index;
-//    };
-
-//    static void setup() {
-//        setupImpl<Ks...>(0);
-//    }
-
-//    template<int K>
-//    static void setupImpl(int id) {
-//        GetIndex<K>::index = id;
-//    }
-
-//    template<int K1, int K2, int... Rest>
-//    static void setupImpl(int id) {
-//        GetIndex<K1>::index = id++;
-//        setupImpl<K2, Rest...>(id);
-//    }
-//};
-
-//template<int... Ks> template<int N> int Indexer<Ks...>::GetIndex<N>::index = 0;
-
-int main(int argc, char *argv[])
+void test_async_access()
 {
-//    test_bitflag();
-//    test_entity_operations();
-//    test_view();
-
-//    test_registry();
-
     registry reg;
     entity_id e = reg.createEntity();
 
@@ -280,6 +248,32 @@ int main(int argc, char *argv[])
     th2.join();
     th3.join();
     logger.join();
+}
+
+void test_getting_single_component()
+{
+    registry reg;
+    entity_id e = reg.createEntity();
+
+    auto strC1 = std::make_shared<StringComponent>();
+    strC1->name = "AAA";
+    reg.insert(e, Tag<StringComponent>(), strC1);
+
+    std::cout << reg.get<StringComponent>(e)->name << std::endl;
+    assert(reg.get<StringComponent>(e)->name == strC1->name);
+}
+
+int main(int argc, char *argv[])
+{
+//    test_bitflag();
+//    test_entity_operations();
+//    test_view();
+
+//    test_registry();
+
+//    test_async_access();
+
+    test_getting_single_component();
 
     return 0;
 }

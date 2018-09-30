@@ -43,6 +43,23 @@ struct registry
         return view<Ts...>(std::move(entities), std::move(components));
     }
 
+    template<class T>
+    std::shared_ptr<const T> get(entity_id id) const
+    {
+        mMutex.lock();
+        auto iter = mEntities.find(id);
+        if (iter == mEntities.end()) {
+            mMutex.unlock();
+            return nullptr;
+        }
+        std::shared_ptr<entity> e = iter->second;
+        mMutex.unlock();
+        if (!e->has(Tag<T>())) {
+            return nullptr;
+        }
+        return std::static_pointer_cast<const T>(e->get<T>().front());
+    }
+
 private:
     template<class T>
     static void fillBitflag(bitflag& bf) {
