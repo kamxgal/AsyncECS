@@ -6,6 +6,8 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <functional>
+#include <variant>
 
 #include "entity.h"
 #include "view.h"
@@ -28,9 +30,9 @@ struct registry
         std::vector<entity_id> entities;
         std::vector<component_const_ptr> components;
 
-        mMutex.lock();
+        mAccessMutex.lock();
         auto copy = mEntities;
-        mMutex.unlock();
+        mAccessMutex.unlock();
 
         for (auto iter = copy.begin(); iter != copy.end(); ++iter)
         {
@@ -46,18 +48,59 @@ struct registry
     template<class T>
     std::shared_ptr<const T> get(entity_id id) const
     {
-        mMutex.lock();
+        mAccessMutex.lock();
         auto iter = mEntities.find(id);
         if (iter == mEntities.end()) {
-            mMutex.unlock();
+            mAccessMutex.unlock();
             return nullptr;
         }
         std::shared_ptr<entity> e = iter->second;
-        mMutex.unlock();
+        mAccessMutex.unlock();
         if (!e->has(Tag<T>())) {
             return nullptr;
         }
         return std::static_pointer_cast<const T>(e->get<T>().front());
+    }
+
+    struct Subscription
+    {
+        virtual bool accepts(component_tag tag) const = 0;
+        virtual void handle(entity_id id, component_tag tag, component_const_ptr c) const = 0;
+    };
+
+    template<class T>
+    using SubscriptionNotifFunc = std::function<void(entity_id, std::shared_ptr<const T>)>;
+
+    template<class T>
+    using PreconditionFunc = std::function<bool(entity_id, std::shared_ptr<const T>)>;
+
+    template<class T>
+    struct SubscriptionVariant : public Subscription
+    {
+        SubscriptionVariant(SubscriptionNotifFunc<T> cb, PreconditionFunc<T> prec)
+            : callback(cb), precondition(prec)
+        {}
+
+        bool accepts(component_tag tag) const override { return tag == Tag<T>(); }
+        void handle(entity_id id, component_tag tag, component_const_ptr c) const {
+            if ( tag != Tag<T>()) {
+                return;
+            }
+
+            std::shared_ptr<const T> comp = std::static_pointer_cast<const T>(c);
+            if (precondition(id, comp)) {
+                callback(id, comp);
+            }
+        }
+        SubscriptionNotifFunc<T> callback;
+        PreconditionFunc<T> precondition;
+    };
+
+    template<class T>
+    void subscribe(SubscriptionNotifFunc<T> callback,
+        PreconditionFunc<T> precondition = [](entity_id, std::shared_ptr<const T>) -> bool { return true; })
+    {
+        addSubscription(std::make_shared<SubscriptionVariant<T>>(callback, precondition));
     }
 
 private:
@@ -95,8 +138,17 @@ private:
         collectData<T2, Rest...>(entity, components);
     }
 
+    void addSubscription(std::shared_ptr<Subscription> s);
+
+    void handleSubscription(entity_id id, component_tag tag, component_ptr c);
+
 private:
+    using subscription_id = size_t;
+
+    subscription_id mNextAvailableSubscriptionId = 0;
     std::map<entity_id, std::shared_ptr<entity>> mEntities;
-    mutable std::mutex mMutex;
+    std::map<subscription_id, std::shared_ptr<Subscription>> mSubscriptions;
+    mutable std::mutex mAccessMutex;
+    mutable std::mutex mSubscriptionsMutex;
 };
 } //

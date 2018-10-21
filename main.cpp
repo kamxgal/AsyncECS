@@ -1,5 +1,6 @@
 #include <iostream>
 #include <thread>
+#include <sstream>
 
 #include "bitflag.h"
 
@@ -250,6 +251,76 @@ void test_async_access()
     logger.join();
 }
 
+void test_subscribing_and_getting_notification_of_async_update()
+{
+    registry reg;
+
+    entity_id e1 = reg.createEntity();
+    auto strC1 = std::make_shared<StringComponent>();
+    strC1->name = "E1";
+    reg.insert(e1, Tag<StringComponent>(), strC1);
+
+    entity_id e2 = reg.createEntity();
+    auto strC2 = std::make_shared<StringComponent>();
+    strC2->name = "E2";
+    reg.insert(e2, Tag<StringComponent>(), strC2);
+
+    std::mutex logMutex;
+
+    bool isFinished = false;
+
+    reg.subscribe<StringComponent>([&logMutex](entity_id id, std::shared_ptr<const StringComponent> c){
+        std::unique_lock<std::mutex> lock(logMutex);
+        std::cout << "E1> " << c->name << std::endl;
+    }, [e1](entity_id id, std::shared_ptr<const StringComponent>) {
+        return id == e1;
+    });
+
+    reg.subscribe<StringComponent>([&logMutex](entity_id id, std::shared_ptr<const StringComponent> c){
+        std::unique_lock<std::mutex> lock(logMutex);
+        std::cout << "E2> " << c->name << std::endl;
+    }, [e2](entity_id id, std::shared_ptr<const StringComponent>) {
+        return id == e2;
+    });
+
+    reg.subscribe<StringComponent>([&isFinished](entity_id id, std::shared_ptr<const StringComponent> c){
+        isFinished = true;
+    }, [e1](entity_id id, std::shared_ptr<const StringComponent> c) {
+        return c->name.find("10000") != std::string::npos;
+    });
+
+    std::thread th1([&reg, &isFinished, e1](){
+        unsigned count = 0;
+
+        while (!isFinished)
+        {
+            auto comp = reg.get<StringComponent>(e1);
+            auto update = std::static_pointer_cast<StringComponent>(comp->clone());
+            std::stringstream ss;
+            ss << "E1 - ver " << count++;
+            update->name = ss.str();
+            reg.update(e1, Tag<StringComponent>(), update);
+        }
+    });
+
+    std::thread th2([&reg, &isFinished, e2](){
+        unsigned count = 0;
+
+        while (!isFinished)
+        {
+            auto comp = reg.get<StringComponent>(e2);
+            auto update = std::static_pointer_cast<StringComponent>(comp->clone());
+            std::stringstream ss;
+            ss << "E2 - ver " << count++;
+            update->name = ss.str();
+            reg.update(e2, Tag<StringComponent>(), update);
+        }
+    });
+
+    th1.join();
+    th2.join();
+}
+
 void test_getting_single_component()
 {
     registry reg;
@@ -263,6 +334,35 @@ void test_getting_single_component()
     assert(reg.get<StringComponent>(e)->name == strC1->name);
 }
 
+void test_subscibing_and_getting_nottification()
+{
+    registry reg;
+    entity_id e = reg.createEntity();
+
+    auto strC1 = std::make_shared<StringComponent>();
+    strC1->name = "AAA";
+    reg.insert(e, Tag<StringComponent>(), strC1);
+
+    auto myView = reg.get<StringComponent>();
+    auto comp = myView.get<StringComponent>(myView.entities().front());
+    auto update = std::static_pointer_cast<StringComponent>(comp->clone());
+    update->name = "UPDATE";
+
+
+    bool isUpdateNotifReceived = false;
+    reg.subscribe<StringComponent>([&isUpdateNotifReceived](entity_id, std::shared_ptr<const StringComponent>){
+        std::cout << "isUpdateNotifReceived = true" << std::endl;
+        isUpdateNotifReceived = true;
+    });
+
+    reg.update(e, Tag<StringComponent>(), update);
+
+    assert(isUpdateNotifReceived);
+    std::cout << "isUpdateNotifReceived = " << isUpdateNotifReceived << std::endl;
+}
+
+
+
 int main(int argc, char *argv[])
 {
 //    test_bitflag();
@@ -273,7 +373,11 @@ int main(int argc, char *argv[])
 
 //    test_async_access();
 
-    test_getting_single_component();
+//    test_getting_single_component();
+
+//    test_subscibing_and_getting_nottification();
+
+    test_subscribing_and_getting_notification_of_async_update();
 
     return 0;
 }

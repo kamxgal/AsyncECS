@@ -29,11 +29,9 @@ std::vector<component_const_ptr> entity::get(const bitflag &bf) const
     auto resources = mResources;
     mMutex.unlock();
 
-//    auto comp = result.begin();
     for (size_t i=0; i<bf.size(); ++i)
     {
         if (bf.at(i) && mBitflag.at(i)) {
-//            *comp++ = resources.at(i);
             result.push_back(resources.at(i));
         }
     }
@@ -55,6 +53,7 @@ bool entity::insert(component_tag tag, component_ptr comp)
 
     mResources[tag] = comp;
     mBitflag.set(tag, true);
+    return true;
 }
 
 bool entity::remove(component_tag tag)
@@ -87,5 +86,6 @@ bool entity::update(component_tag tag, component_ptr comp)
 
     ++comp->mRevision;
     mResources[tag] = comp;
+    return true;
 }
 } // namespace async_ecs
