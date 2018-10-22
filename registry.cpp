@@ -10,7 +10,7 @@ namespace async_ecs
 
 entity_id registry::createEntity()
 {
-    std::lock_guard<std::mutex> lock(mAccessMutex);
+    std::unique_lock<std::mutex> lock(mAccessMutex);
     mEntities.emplace(std::make_pair(nextAvailableEntityId,
         entity(nextAvailableEntityId)));
     return nextAvailableEntityId++;
@@ -67,7 +67,7 @@ bool registry::remove(entity_id id, component_tag tag)
 
 bool registry::remove(entity_id id)
 {
-    std::lock_guard<std::mutex> lock(mAccessMutex);
+    std::unique_lock<std::mutex> lock(mAccessMutex);
     auto iter = mEntities.find(id);
     bool isRemoved = iter != mEntities.end();
     mEntities.erase(iter);
@@ -76,7 +76,7 @@ bool registry::remove(entity_id id)
 
 void registry::addSubscription(std::shared_ptr<registry::Subscription> s)
 {
-    std::lock_guard<std::mutex> lock(mSubscriptionsMutex);
+    std::unique_lock<std::mutex> lock(mSubscriptionsMutex);
     mSubscriptions.emplace(std::make_pair(mNextAvailableSubscriptionId++, s));
 }
 
