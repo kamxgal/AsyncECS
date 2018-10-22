@@ -11,6 +11,7 @@ struct bitflag_private;
 struct bitflag
 {
     bitflag(size_t size = 1);
+    bitflag(const bitflag& other);
     bitflag(bitflag&& other);
     ~bitflag();
 

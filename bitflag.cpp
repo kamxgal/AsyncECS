@@ -1,5 +1,6 @@
 #include "bitflag.h"
 
+#include <cstring>
 #include <iostream>
 
 struct bitflag_private
@@ -18,6 +19,18 @@ bitflag::bitflag(size_t size)
     size_t bytes = res.quot;
     bytes += res.rem > 0 ? 1 : 0;
     data->bits = std::calloc(bytes, sizeof(char));
+}
+
+bitflag::bitflag(const bitflag& other)
+    : data(std::make_unique<bitflag_private>())
+{
+    data->size = other.data->size;
+    data->enabledFlagsCount = other.data->enabledFlagsCount;
+    auto res = std::div(data->size, 8);
+    size_t bytes = res.quot;
+    bytes += res.rem > 0 ? 1 : 0;
+    data->bits = std::malloc(bytes);
+    memcpy(data->bits, other.data->bits, bytes);
 }
 
 bitflag::bitflag(bitflag&& other)

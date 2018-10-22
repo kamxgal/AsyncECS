@@ -11,6 +11,8 @@ using entity_id = size_t;
 struct entity
 {
     entity(entity_id id);
+    entity(const entity& other);
+
     entity_id id() const { return mId; }
     bool has(component_tag t) const;
     bool has(const bitflag& bf) const;

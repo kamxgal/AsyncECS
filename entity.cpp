@@ -6,6 +6,13 @@ entity::entity(entity_id id) : mId(id)
 {
 }
 
+entity::entity(const entity &other)
+    : mId(other.mId)
+    , mBitflag(other.mBitflag)
+    , mResources(other.mResources)
+{
+}
+
 bool entity::has(component_tag t) const
 {
     std::unique_lock<std::mutex> lock(mMutex);

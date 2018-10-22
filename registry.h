@@ -36,8 +36,8 @@ struct registry
 
         for (auto iter = copy.begin(); iter != copy.end(); ++iter)
         {
-            std::shared_ptr<entity> ptr = iter->second;
-            if (!ptr->has(bf)) continue;
+            entity& ptr = iter->second;
+            if (!ptr.has(bf)) continue;
             entities.push_back(iter->first);
             collectData<Ts...>(ptr, components);
         }
@@ -54,12 +54,12 @@ struct registry
             mAccessMutex.unlock();
             return nullptr;
         }
-        std::shared_ptr<entity> e = iter->second;
+        const entity& e = iter->second;
         mAccessMutex.unlock();
-        if (!e->has(Tag<T>())) {
+        if (!e.has(Tag<T>())) {
             return nullptr;
         }
-        return std::static_pointer_cast<const T>(e->get<T>().front());
+        return std::static_pointer_cast<const T>(e.get<T>().front());
     }
 
     struct Subscription
@@ -122,18 +122,18 @@ private:
     }
 
     template<class T>
-    void collectData(std::shared_ptr<entity>& entity,
+    void collectData(entity& entity,
         std::vector<component_const_ptr>& components) const
     {
-        auto vec = entity->get<T>();
+        auto vec = entity.get<T>();
         components.insert(components.end(), vec.begin(), vec.end());
     }
 
     template<class T1, class T2, class... Rest>
-    void collectData(std::shared_ptr<entity>& entity,
+    void collectData(entity& entity,
         std::vector<component_const_ptr>& components) const
     {
-        auto vec = entity->get<T1>();
+        auto vec = entity.get<T1>();
         components.insert(components.end(), vec.begin(), vec.end());
         collectData<T2, Rest...>(entity, components);
     }
@@ -146,7 +146,7 @@ private:
     using subscription_id = size_t;
 
     subscription_id mNextAvailableSubscriptionId = 0;
-    std::map<entity_id, std::shared_ptr<entity>> mEntities;
+    std::map<entity_id, entity> mEntities;
     std::map<subscription_id, std::shared_ptr<Subscription>> mSubscriptions;
     mutable std::mutex mAccessMutex;
     mutable std::mutex mSubscriptionsMutex;
