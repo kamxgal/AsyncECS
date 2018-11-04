@@ -133,62 +133,122 @@ component_tag async_ecs::Tag<IntComponent>()
     return 2;
 }
 
-void test_entity_operations()
+TEST(EntityShould, HaveComponentAfterInsert)
 {
-    std::shared_ptr<IntComponent> intComp = std::make_shared<IntComponent>();
-    async_ecs::entity e(0);
-    assert(!e.has(async_ecs::Tag<IntComponent>()));
-    e.insert(async_ecs::Tag<IntComponent>(), intComp);
-    assert(e.has(async_ecs::Tag<IntComponent>()));
+	std::shared_ptr<IntComponent> intComp = std::make_shared<IntComponent>();
+	async_ecs::entity e(0);
+	ASSERT_TRUE(!e.has(async_ecs::Tag<IntComponent>()));
+	e.insert(async_ecs::Tag<IntComponent>(), intComp);
+	ASSERT_TRUE(e.has(async_ecs::Tag<IntComponent>()));
 
-    bitflag bf(3);
-    bf.set(Tag<IntComponent>(), true);
-    auto vec1 = e.get(bf);
-    auto vec2 = e.get(bf);
-    assert(vec1.size() == 1);
-    assert(vec2.size() == 1);
-
-    auto clone1 = std::static_pointer_cast<IntComponent>(vec1.front()->clone());
-    clone1->number = 10;
-    auto clone2 = std::static_pointer_cast<IntComponent>(vec1.front()->clone());
-    clone2->number = 20;
-
-    assert(e.update(Tag<IntComponent>(), clone1));
-    assert(!e.update(Tag<IntComponent>(), clone2));
-
-    auto updatedVec = e.get(bf);
-    assert(updatedVec.size() == 1);
-    auto updatedComp = std::static_pointer_cast<const IntComponent>(updatedVec.front());
-
-    assert(updatedComp->number == 10);
-
-    assert(e.remove(Tag<IntComponent>()));
-    auto emptyVec = e.get(bf);
-    assert(emptyVec.empty());
 }
 
-void test_view()
+TEST(EntityShould, GetComponentOfGivenTag)
 {
-    auto strC1 = std::make_shared<StringComponent>();
-    strC1->name = "AAA";
+	std::shared_ptr<IntComponent> intComp = std::make_shared<IntComponent>();
+	async_ecs::entity e(0);
+	e.insert(async_ecs::Tag<IntComponent>(), intComp);
 
-    auto strC2 = std::make_shared<StringComponent>();
-    strC2->name = "BBB";
+	bitflag bf(3);
+	bf.set(Tag<IntComponent>(), true);
+	auto vec1 = e.get(bf);
+	auto vec2 = e.get(bf);
+	ASSERT_EQ(1, vec1.size());
+	ASSERT_EQ(1, vec2.size());
+}
 
-    auto intC1 = std::make_shared<IntComponent>();
-    intC1->number = 10;
-    auto intC2 = std::make_shared<IntComponent>();
-    intC2->number = 20;
+TEST(EntityShould, UpdateComponent)
+{
+	std::shared_ptr<IntComponent> intComp = std::make_shared<IntComponent>();
+	async_ecs::entity e(0);
+	e.insert(async_ecs::Tag<IntComponent>(), intComp);
 
-    std::vector<component_const_ptr> vec = { strC1, intC1, strC2, intC2 };
+	bitflag bf(3);
+	bf.set(Tag<IntComponent>(), true);
+	auto vec = e.get(bf);
+	ASSERT_EQ(1, vec.size());
 
-    view<StringComponent, IntComponent> myView({4,10}, std::move(vec));
+	auto clone = std::static_pointer_cast<IntComponent>(vec.front()->clone());
+	clone->number = 10;
 
-    auto comp = myView.get<IntComponent>(10);
-    if (comp)
-    {
-        std::cout << "> " << comp->number << std::endl;
-    }
+	ASSERT_TRUE(e.update(Tag<IntComponent>(), clone));
+
+	auto updatedVec = e.get(bf);
+	ASSERT_EQ(1, updatedVec.size());
+	auto updatedComp = std::static_pointer_cast<const IntComponent>(updatedVec.front());
+
+	ASSERT_EQ(10, updatedComp->number);
+}
+
+TEST(EntityShould, NotAcceptUpdateRequestIfComponentWasAlreadyUpdatedByAnotherClient)
+{
+	std::shared_ptr<IntComponent> intComp = std::make_shared<IntComponent>();
+	async_ecs::entity e(0);
+	e.insert(async_ecs::Tag<IntComponent>(), intComp);
+
+	bitflag bf(3);
+	bf.set(Tag<IntComponent>(), true);
+
+	// simulating client 1
+	auto vec1 = e.get(bf);
+	ASSERT_EQ(1, vec1.size());
+	auto updated1 = std::static_pointer_cast<IntComponent>(vec1.front()->clone());
+	updated1->number = 10;
+
+	// simulating client 2
+	auto vec2 = e.get(bf);
+	ASSERT_EQ(1, vec2.size());
+	auto updated2 = std::static_pointer_cast<IntComponent>(vec2.front()->clone());
+	updated2->number = 20;
+
+	ASSERT_TRUE(e.update(Tag<IntComponent>(), updated1));
+	// second update reqest is not handled because updated2 is created based on the same
+	// "version" of component as updated1
+	ASSERT_FALSE(e.update(Tag<IntComponent>(), updated2));
+}
+
+TEST(EntityShould, InsertAndRemoveComponent)
+{
+	std::shared_ptr<IntComponent> intComp = std::make_shared<IntComponent>();
+	async_ecs::entity e(0);
+	ASSERT_FALSE(e.has(async_ecs::Tag<IntComponent>()));
+	e.insert(async_ecs::Tag<IntComponent>(), intComp);
+	ASSERT_TRUE(e.has(async_ecs::Tag<IntComponent>()));
+	ASSERT_TRUE(e.remove(Tag<IntComponent>()));
+	ASSERT_FALSE(e.has(async_ecs::Tag<IntComponent>()));
+}
+
+TEST(ViewShould, BeCreatedAndHandleGetRequests)
+{
+	std::vector<entity_id> entities;
+	std::vector<component_const_ptr> components;
+
+	{ // creating dummy entities and components
+		auto strComp1 = std::make_shared<StringComponent>();
+		strComp1->name = "AAA";
+		auto intComp1 = std::make_shared<IntComponent>();
+		intComp1->number = 10;
+
+		auto strComp2 = std::make_shared<StringComponent>();
+		strComp2->name = "BBB";
+		auto intComp2 = std::make_shared<IntComponent>();
+		intComp2->number = 20;
+
+		entities = { 4, 10 };
+		components = { strComp1, intComp1, strComp2, intComp2 };
+	}
+
+    view<StringComponent, IntComponent> myView(std::move(entities), std::move(components));
+
+    ASSERT_NE(nullptr, myView.get<IntComponent>(4));
+	EXPECT_EQ(10, myView.get<IntComponent>(4)->number);
+	ASSERT_NE(nullptr, myView.get<StringComponent>(4));
+	EXPECT_EQ("AAA", myView.get<StringComponent>(4)->name);
+
+	ASSERT_NE(nullptr, myView.get<IntComponent>(10));
+	EXPECT_EQ(20, myView.get<IntComponent>(10)->number);
+	ASSERT_NE(nullptr, myView.get<StringComponent>(10));
+	EXPECT_EQ("BBB", myView.get<StringComponent>(10)->name);
 }
 
 void test_registry()
