@@ -40,7 +40,9 @@ bitflag::bitflag(bitflag&& other)
 
 bitflag::~bitflag()
 {
-    std::free(data->bits);
+	if (data) {
+		std::free(data->bits);
+	}
 }
 
 bool bitflag::at(size_t pos) const
@@ -75,7 +77,13 @@ void bitflag::resize(size_t size)
     size_t bytes = res.quot;
     bytes += res.rem > 0 ? 1 : 0;
     data->bits = realloc(data->bits, bytes);
-    data->size = size;
+	size_t oldSize = data->size;
+	data->size = size;
+	for (size_t i=oldSize; i<size; ++i)
+	{
+		set(i, false);
+	}
+
 }
 
 size_t bitflag::enabled_flags_count() const { return data->enabledFlagsCount; }
@@ -91,7 +99,13 @@ bool bitflag::operator&(const bitflag& rhs) const
     char* rhsByte = (char*)rhs.data->bits;
     for (int i=0; i<bytes-1; ++i)
     {
-        bitsToCheck -= 8;
+		if (bitsToCheck > 8) {
+			bitsToCheck -= 8;
+		}
+		else {
+			bitsToCheck = 0;
+		}
+
         if (*byte == 0 && *rhsByte == 0)
         {
             ++byte;
@@ -105,11 +119,26 @@ bool bitflag::operator&(const bitflag& rhs) const
         ++byte;
         ++rhsByte;
     }
+
+	if (bitsToCheck == 0) {
+		return true;
+	}
+
     char mask = 0;
     for (size_t i=0; i<bitsToCheck; ++i)
     {
         mask |= (1 << i);
     }
+	char val1 = *byte & mask;
+	char val2 = *rhsByte & mask;
+    return val1 == val2;
+}
 
-    return (*byte & mask) & (*rhsByte & mask);
+bitflag bitflag::operator!() const
+{
+	bitflag res(*this);
+	for (size_t i = 0; i < res.size(); ++i) {
+		res.set(i, !res.at(i));
+	}
+	return res;
 }

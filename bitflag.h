@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <algorithm>
 #include <memory>
+#include <sstream>
 #include <ostream>
 
 struct bitflag_private;
@@ -21,6 +22,13 @@ struct bitflag
     void resize(size_t size);
     size_t enabled_flags_count() const;
     bool operator&(const bitflag& rhs) const;
+	bitflag operator!() const;
+
+	std::string str() const {
+		std::stringstream ss;
+		ss << *this;
+		return ss.str();
+	}
 
     friend std::ostream& operator<<(std::ostream& o, const bitflag& rhs ) {
         for (int j=0; j<rhs.size(); ++j) {

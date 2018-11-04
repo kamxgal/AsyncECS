@@ -2,6 +2,8 @@
 #include <thread>
 #include <sstream>
 
+#include <gtest/gtest.h>
+
 #include "bitflag.h"
 
 #include "entity.h"
@@ -12,20 +14,87 @@
 using namespace std;
 using namespace async_ecs;
 
-void test_bitflag()
+TEST(BitflagShould, SetAndUnsetProperFlag)
 {
-    bitflag f(15);
+	bitflag f(4);
+	EXPECT_EQ("0000", f.str());
+	f.set(3, true);
+	EXPECT_EQ("0001", f.str());
+	f.set(0, true);
+	EXPECT_EQ("1001", f.str());
+	f.set(0, false);
+	EXPECT_EQ("0001", f.str());
+	f.set(3, false);
+	EXPECT_EQ("0000", f.str());
+}
 
-    bitflag sec(4); sec.set(3, true);
-    sec.resize(11); sec.set(3, false); sec.set(9, true);
-    std::cout << "sec = " << sec << std::endl;
+TEST(BitflagShould, SetAndUnsetProperFlagAfterResize)
+{
+	bitflag f(4);
+	f.set(3, true);
+	EXPECT_EQ("0001", f.str());
 
-    for(int i=0; i<f.size(); ++i) {
-        f.set(i, true);
-        bool res = (f & sec);
-        std::cout << f << " " << res << std::endl;
-        f.set(i, false);
-    }
+	f.resize(11);
+	EXPECT_EQ("00010000000", f.str());
+	f.set(3, false);
+	EXPECT_EQ("00000000000", f.str());
+	f.set(9, true);
+	EXPECT_EQ("00000000010", f.str());
+}
+
+TEST(BitflagShould, Reverse)
+{
+	bitflag first(6);
+	first.set(3, true);
+
+	bitflag second = !first;
+	EXPECT_EQ("111011", second.str());
+}
+
+TEST(BitflagShould, CompareWithBitAndOperationLessThanByte)
+{
+	bitflag first(6);
+	first.set(3, true);
+
+	bitflag second(4);
+	ASSERT_FALSE(first & second);
+
+	second.set(0, true);
+	ASSERT_FALSE(first & second);
+	second.set(1, true);
+	ASSERT_FALSE(first & second);
+	second.set(2, true);
+	ASSERT_FALSE(first & second);
+	second.set(3, true);
+	char val = first & second;
+	ASSERT_FALSE(first & second);
+	second.set(0, false);
+	ASSERT_FALSE(first & second);
+	second.set(1, false);
+	ASSERT_FALSE(first & second);
+	second.set(2, false);
+	ASSERT_TRUE(first & second);
+}
+
+TEST(BitflagShould, CompareWithBitAndOperationTwoBytes)
+{
+	bitflag first(14);
+	first.set(12, true);
+
+	bitflag second(11);
+	ASSERT_TRUE(first & second);
+
+	first.set(10, true);
+	ASSERT_FALSE(first & second);
+
+	second.set(10, true);
+	ASSERT_TRUE(first & second);
+
+	first.set(1, true);
+	ASSERT_FALSE(first & second);
+
+	second.set(1, true);
+	ASSERT_TRUE(first & second);
 }
 
 struct StringComponent : async_ecs::component
@@ -362,7 +431,7 @@ void test_subscibing_and_getting_nottification()
 }
 
 
-
+/**
 int main(int argc, char *argv[])
 {
 //    test_bitflag();
@@ -377,7 +446,15 @@ int main(int argc, char *argv[])
 
 //    test_subscibing_and_getting_nottification();
 
-    test_subscribing_and_getting_notification_of_async_update();
+    //test_subscribing_and_getting_notification_of_async_update();
 
     return 0;
+}
+*/
+
+int main(int argc, char** argv)
+{
+	testing::InitGoogleTest(&argc, argv);
+	RUN_ALL_TESTS();
+	std::getchar(); // keep console window open until Return keystroke
 }
