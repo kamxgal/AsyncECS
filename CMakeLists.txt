@@ -1,11 +1,9 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0.2)
+project(AsyncECS C CXX)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -pthread")
-#find_package(Threads REQUIRED)
-#SET(CMAKE_CXX_FLAGS -pthread)
 
 set(FILES
-    main.cpp
     bitflag.h
     bitflag.cpp
     entity.h
@@ -17,9 +15,7 @@ set(FILES
     registry.cpp
 )
 
-project(AsyncECS C CXX)
-add_executable(${PROJECT_NAME} ${FILES})
+add_subdirectory(3rd_party)
+add_subdirectory(tests)
 
-target_link_libraries (${PROJECT_NAME}
-    ${CMAKE_THREAD_LIBS_INIT}
-)
+add_library(${PROJECT_NAME} ${FILES} ${TEST_FILES})

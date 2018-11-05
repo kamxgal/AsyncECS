@@ -97,7 +97,7 @@ bool bitflag::operator&(const bitflag& rhs) const
     bytes += res.rem > 0 ? 1 : 0;
     char* byte = (char*)data->bits;
     char* rhsByte = (char*)rhs.data->bits;
-    for (int i=0; i<bytes-1; ++i)
+    for (size_t i=0; i<bytes-1; ++i)
     {
 		if (bitsToCheck > 8) {
 			bitsToCheck -= 8;

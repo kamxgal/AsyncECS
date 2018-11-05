@@ -31,7 +31,7 @@ struct bitflag
 	}
 
     friend std::ostream& operator<<(std::ostream& o, const bitflag& rhs ) {
-        for (int j=0; j<rhs.size(); ++j) {
+        for (size_t j=0; j<rhs.size(); ++j) {
             o << rhs.at(j);
         }
         return o;
