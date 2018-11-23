@@ -27,30 +27,30 @@ TEST(RegistryShould, CreateAndUpdateComponentsAndCollectView)
 	reg.insert(e2, Tag<StringComponent>(), strC2);
 	reg.insert(e2, Tag<IntComponent>(), intC2);
 
-	auto myView = reg.get<StringComponent>();
-	EXPECT_EQ(strC1->name, myView.get<StringComponent>(e1)->name);
-	EXPECT_EQ(strC2->name, myView.get<StringComponent>(e2)->name);
+	auto myView = reg.select<StringComponent>();
+	EXPECT_EQ(strC1->name, myView.select<StringComponent>(e1)->name);
+	EXPECT_EQ(strC2->name, myView.select<StringComponent>(e2)->name);
 
-	auto myView2 = reg.get<StringComponent, IntComponent>();
-	EXPECT_EQ(intC1->number, myView2.get<IntComponent>(e1)->number);
-	EXPECT_EQ(intC2->number, myView2.get<IntComponent>(e2)->number);
-	EXPECT_EQ(strC1->name, myView2.get<StringComponent>(e1)->name);
-	EXPECT_EQ(strC2->name, myView2.get<StringComponent>(e2)->name);
+	auto myView2 = reg.select<StringComponent, IntComponent>();
+	EXPECT_EQ(intC1->number, myView2.select<IntComponent>(e1)->number);
+	EXPECT_EQ(intC2->number, myView2.select<IntComponent>(e2)->number);
+	EXPECT_EQ(strC1->name, myView2.select<StringComponent>(e1)->name);
+	EXPECT_EQ(strC2->name, myView2.select<StringComponent>(e2)->name);
 
-	auto strC1_update = myView2.get<StringComponent>(e1)->clone();
+	auto strC1_update = myView2.select<StringComponent>(e1)->clone();
 	std::static_pointer_cast<StringComponent>(strC1_update)->name = "UPDATED";
-	auto strC1_faulty_update = myView2.get<StringComponent>(e1)->clone();
+	auto strC1_faulty_update = myView2.select<StringComponent>(e1)->clone();
 	std::static_pointer_cast<StringComponent>(strC1_faulty_update)->name = "XXXXXXXXXXX";
 
 	ASSERT_TRUE(reg.update(e1, Tag<StringComponent>(), strC1_update));
 	ASSERT_FALSE(reg.update(e1, Tag<StringComponent>(), strC1_faulty_update));
 
-	auto myView3 = reg.get<StringComponent, IntComponent>();
-	EXPECT_EQ(intC1->number, myView3.get<IntComponent>(e1)->number);
-	EXPECT_EQ(intC2->number, myView3.get<IntComponent>(e2)->number);
+	auto myView3 = reg.select<StringComponent, IntComponent>();
+	EXPECT_EQ(intC1->number, myView3.select<IntComponent>(e1)->number);
+	EXPECT_EQ(intC2->number, myView3.select<IntComponent>(e2)->number);
 	EXPECT_EQ(std::static_pointer_cast<StringComponent>(strC1_update)->name,
-		myView3.get<StringComponent>(e1)->name);
-	EXPECT_EQ(strC2->name, myView3.get<StringComponent>(e2)->name);
+		myView3.select<StringComponent>(e1)->name);
+	EXPECT_EQ(strC2->name, myView3.select<StringComponent>(e2)->name);
 }
 
 TEST(RegistryShould, GetSingleComponentWithoutView)
@@ -62,7 +62,7 @@ TEST(RegistryShould, GetSingleComponentWithoutView)
 	strC1->name = "AAA";
 	reg.insert(e, Tag<StringComponent>(), strC1);
 
-	EXPECT_EQ(reg.get<StringComponent>(e)->name, strC1->name);
+	EXPECT_EQ(reg.select<StringComponent>(e)->name, strC1->name);
 }
 
 TEST(RegistryShould, SubscribeForUpdateAndGetNotification)
@@ -74,8 +74,8 @@ TEST(RegistryShould, SubscribeForUpdateAndGetNotification)
 	strC1->name = "AAA";
 	reg.insert(e, Tag<StringComponent>(), strC1);
 
-	auto myView = reg.get<StringComponent>();
-	auto comp = myView.get<StringComponent>(myView.entities().front());
+	auto myView = reg.select<StringComponent>();
+	auto comp = myView.select<StringComponent>(myView.entities().front());
 	auto update = std::static_pointer_cast<StringComponent>(comp->clone());
 	update->name = "UPDATE";
 

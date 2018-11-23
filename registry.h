@@ -23,7 +23,7 @@ struct registry
     bool remove(entity_id);
 
     template<class... Ts>
-    view<Ts...> get() const {
+    view<Ts...> select() const {
         bitflag bf;
         fillBitflag<Ts...>(bf);
 
@@ -46,7 +46,7 @@ struct registry
     }
 
     template<class T>
-    std::shared_ptr<const T> get(entity_id id) const
+    std::shared_ptr<const T> select(entity_id id) const
     {
         mAccessMutex.lock();
         auto iter = mEntities.find(id);

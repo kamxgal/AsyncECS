@@ -28,11 +28,11 @@ struct view
     {}
 
     template<class T>
-    std::shared_ptr<const T> get(entity_id id)
+    std::shared_ptr<const T> select(entity_id id)
     {
         size_t entityIndex = 0;
-        bool isEntityIndexFound = false;
-        for (; entityIndex < mEntities.size(); ++entityIndex) {
+		bool isEntityIndexFound = false;
+		for (; entityIndex < mEntities.size(); ++entityIndex) {
             if (mEntities.at(entityIndex) == id) {
                 isEntityIndexFound = true;
                 break;
@@ -46,6 +46,22 @@ struct view
         size_t offset = entityIndex * mNumOfComponentsPerEntity + GetComponentIndex<T>::index;
         return std::dynamic_pointer_cast<const T>(mResources[offset]);
     }
+
+
+	template<class T>
+	std::map<entity_id, std::shared_ptr<const T>> select(std::function<bool(std::shared_ptr<const T>)> predicate) {
+		std::map<entity_id, std::shared_ptr<const T>> result;
+		for (size_t entityIndex = 0; entityIndex < mEntities.size(); ++entityIndex) {
+			size_t offset = entityIndex * mNumOfComponentsPerEntity + GetComponentIndex<T>::index;
+			assert(offset < mResources.size());
+			const auto component = std::dynamic_pointer_cast<const T>(mResources[offset]);
+			if (!predicate(component)) {
+				continue;
+			}
+			result.insert(std::make_pair(mEntities.at(entityIndex), component));
+		}
+		return result;
+	}
 
     const std::vector<entity_id>& entities() { return mEntities; }
 
