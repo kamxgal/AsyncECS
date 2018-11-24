@@ -12,7 +12,7 @@ entity_id registry::createEntity()
 {
     std::unique_lock<std::mutex> lock(mAccessMutex);
     mEntities.emplace(std::make_pair(nextAvailableEntityId,
-        entity(nextAvailableEntityId)));
+        std::make_shared<entity>(nextAvailableEntityId)));
     return nextAvailableEntityId++;
 }
 
@@ -24,10 +24,10 @@ bool registry::insert(entity_id id, component_tag tag, component_ptr c)
         return false;
     }
 
-    entity& e = iter->second;
+    auto e = iter->second;
     mAccessMutex.unlock();
 
-    return e.insert(tag, c);
+    return e->insert(tag, c);
 }
 
 bool registry::update(entity_id id, component_tag tag, component_ptr c)
@@ -38,15 +38,13 @@ bool registry::update(entity_id id, component_tag tag, component_ptr c)
         return false;
     }
 
-    entity& e = iter->second;
+    auto e = iter->second;
     mAccessMutex.unlock();
 
-    bool result = e.update(tag, c);
-    switch (result)
-    {
-    case true: handleSubscription(id, tag, c); break;
-    default: break;
-    }
+    bool result = e->update(tag, c);
+	if (result) {
+		handleSubscription(id, tag, c);
+	}
 
     return result;
 }
@@ -59,10 +57,10 @@ bool registry::remove(entity_id id, component_tag tag)
         return false;
     }
 
-    entity& e = iter->second;
+    auto e = iter->second;
     mAccessMutex.unlock();
 
-    return e.remove(tag);
+    return e->remove(tag);
 }
 
 bool registry::remove(entity_id id)
