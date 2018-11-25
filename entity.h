@@ -35,13 +35,13 @@ private:
     template<class T>
     static void get_components(std::vector<component_ptr> source, std::vector<component_const_ptr>& result)
     {
-        result.push_back(source.at(Tag<T>()));
+        result.push_back(source.at(component::tag_t<T>()));
     }
 
     template<class T1, class T2, class... Ts>
     static void get_components(std::vector<component_ptr> source, std::vector<component_const_ptr>& result)
     {
-        result.push_back(source.at(Tag<T1>()));
+        result.push_back(source.at(component::tag_t<T1>()));
         get_components<T2, Ts...>(source, result);
     }
 

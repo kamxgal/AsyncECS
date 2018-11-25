@@ -1,6 +1,11 @@
 #include "component.h"
 
-void async_ecs::component::clone_private_data(async_ecs::component_ptr c) const
+namespace async_ecs
 {
-    c->mRevision = mRevision;
+component_tag component::mNextAvailableTag = 0;
+
+void component::clone_private_data(async_ecs::component_ptr c) const
+{
+	c->mRevision = mRevision;
 }
+} // namespace async_ecs

@@ -88,9 +88,12 @@ void bitflag::resize(size_t size)
 
 size_t bitflag::enabled_flags_count() const { return data->enabledFlagsCount; }
 
-bool bitflag::operator&(const bitflag& rhs) const
+bool bitflag::has(const bitflag& rhs) const
 {
-    assert(data->size >= rhs.data->size);
+	if (data->size < rhs.data->size) {
+		return false;
+	}
+
     size_t bitsToCheck = std::min(data->size, rhs.data->size);
     auto res = std::div(bitsToCheck, 8);
     size_t bytes = res.quot;
@@ -131,7 +134,7 @@ bool bitflag::operator&(const bitflag& rhs) const
     }
 	char val1 = *byte & mask;
 	char val2 = *rhsByte & mask;
-    return val1 == val2;
+    return (val1 & val2) == val2;
 }
 
 bitflag bitflag::operator!() const

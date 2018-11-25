@@ -45,23 +45,23 @@ TEST(BitflagShould, CompareWithBitAndOperationLessThanByte)
 	first.set(3, true);
 
 	bitflag second(4);
-	ASSERT_FALSE(first & second);
+	ASSERT_TRUE(first.has(second));
 
 	second.set(0, true);
-	ASSERT_FALSE(first & second);
+	ASSERT_FALSE(first.has(second));
 	second.set(1, true);
-	ASSERT_FALSE(first & second);
+	ASSERT_FALSE(first.has(second));
 	second.set(2, true);
-	ASSERT_FALSE(first & second);
+	ASSERT_FALSE(first.has(second));
 	second.set(3, true);
-	char val = first & second;
-	ASSERT_FALSE(first & second);
+	char val = first.has(second);
+	ASSERT_FALSE(first.has(second));
 	second.set(0, false);
-	ASSERT_FALSE(first & second);
+	ASSERT_FALSE(first.has(second));
 	second.set(1, false);
-	ASSERT_FALSE(first & second);
+	ASSERT_FALSE(first.has(second));
 	second.set(2, false);
-	ASSERT_TRUE(first & second);
+	ASSERT_TRUE(first.has(second));
 }
 
 TEST(BitflagShould, CompareWithBitAndOperationTwoBytes)
@@ -70,17 +70,17 @@ TEST(BitflagShould, CompareWithBitAndOperationTwoBytes)
 	first.set(12, true);
 
 	bitflag second(11);
-	ASSERT_TRUE(first & second);
+	ASSERT_TRUE(first.has(second));
 
 	first.set(10, true);
-	ASSERT_FALSE(first & second);
+	ASSERT_TRUE(first.has(second));
 
 	second.set(10, true);
-	ASSERT_TRUE(first & second);
+	ASSERT_TRUE(first.has(second));
 
 	first.set(1, true);
-	ASSERT_FALSE(first & second);
+	ASSERT_FALSE(first.has(second));
 
 	second.set(1, true);
-	ASSERT_TRUE(first & second);
+	ASSERT_TRUE(first.has(second));
 }

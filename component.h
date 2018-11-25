@@ -11,16 +11,56 @@ using component_ptr = std::shared_ptr<component>;
 
 struct component
 {
-    virtual component_ptr clone() const = 0;
+private:
+	template<class T>
+	struct RegisteredComponents {
+		static bool is_registered;
+		static component_tag tag;
+	};
+
+public:
+	template<class T>
+	static component_tag tag_t() {
+		assert(RegisteredComponents<T>::is_registered);
+		return RegisteredComponents<T>::tag;
+	}
+
+	template<class T>
+	void register_t() {
+		if (RegisteredComponents<T>::is_registered) {
+			return;
+		}
+		RegisteredComponents<T>::is_registered = true;
+		RegisteredComponents<T>::tag = mNextAvailableTag++;
+		RegisteredComponents<const T>::is_registered = true;
+		RegisteredComponents<const T>::tag = mNextAvailableTag;
+	}
+
+	virtual component_ptr clone() const = 0;
+	virtual component_tag tag() const = 0;
 
 protected:
     void clone_private_data(component_ptr c) const;
 private:
+	static component_tag mNextAvailableTag;
     size_t mRevision = 0;
-
     friend struct entity;
 };
 
-template<class T>
-component_tag Tag();
+template<class T> bool component::RegisteredComponents<T>::is_registered = false;
+template<class T> component_tag component::RegisteredComponents<T>::tag = 0;
+
+#define ECS_COMPONENT(NAME) \
+NAME() { \
+    component::register_t<NAME>(); \
+} \
+async_ecs::component_ptr clone() const { \
+	auto cloned = std::make_shared<NAME>(*this); \
+	async_ecs::component::clone_private_data(cloned); \
+	return cloned; \
+} \
+async_ecs::component_tag tag() const override { \
+	return component::tag_t<NAME>(); \
+}
+
 }  // namespace async_ecs

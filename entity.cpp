@@ -2,7 +2,7 @@
 
 namespace async_ecs
 {
-entity::entity(entity_id id) : mId(id)
+entity::entity(entity_id id) : mId(id), mBitflag(0)
 {
 }
 
@@ -16,7 +16,7 @@ entity::entity(const entity &other)
 bool entity::has(component_tag t) const
 {
     std::unique_lock<std::mutex> lock(mMutex);
-    if (mBitflag.size() < t) {
+    if (mBitflag.size() <= t) {
         return false;
     }
 
@@ -26,7 +26,7 @@ bool entity::has(component_tag t) const
 bool entity::has(const bitflag &bf) const
 {
     std::unique_lock<std::mutex> lock(mMutex);
-    return mBitflag & bf;
+    return mBitflag.has(bf);
 }
 
 std::vector<component_const_ptr> entity::get(const bitflag &bf) const
@@ -48,11 +48,17 @@ std::vector<component_const_ptr> entity::get(const bitflag &bf) const
 bool entity::insert(component_tag tag, component_ptr comp)
 {
     entity_id myId = id();
+	component_tag tmp = comp->tag();
+	component_tag tmp2 = tag;
+	size_t s = mBitflag.size();
     std::unique_lock<std::mutex> lock(mMutex);
-    if (mBitflag.size() <= tag) {
+    if (mBitflag.size() <= comp->tag()) {
         mBitflag.resize(tag+1);
         mResources.resize(tag+1);
     }
+
+	size_t s2 = mBitflag.size();
+	size_t s3 = mResources.size();
 
     if (mBitflag.at(tag)) {
         return false;

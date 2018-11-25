@@ -1,7 +1,5 @@
 #pragma once
 
-#include <iostream>
-
 #include <list>
 #include <map>
 #include <memory>
@@ -56,7 +54,7 @@ struct registry
         }
         const auto e = iter->second;
         mAccessMutex.unlock();
-        if (!e->has(Tag<T>())) {
+        if (!e->has(component::tag_t<T>())) {
             return nullptr;
         }
         return std::static_pointer_cast<const T>(e->get<T>().front());
@@ -81,9 +79,9 @@ struct registry
             : callback(cb), precondition(prec)
         {}
 
-        bool accepts(component_tag tag) const override { return tag == Tag<T>(); }
+        bool accepts(component_tag tag) const override { return tag == component::tag_t<T>(); }
         void handle(entity_id id, component_tag tag, component_const_ptr c) const {
-            if ( tag != Tag<T>()) {
+            if ( tag != component::tag_t<T>()) {
                 return;
             }
 
@@ -106,18 +104,18 @@ struct registry
 private:
     template<class T>
     static void fillBitflag(bitflag& bf) {
-        if (bf.size() <= Tag<T>()) {
-            bf.resize(Tag<T>() + 1);
+        if (bf.size() <= component::tag_t<T>()) {
+            bf.resize(component::tag_t<T>() + 1);
         }
-        bf.set(Tag<T>(), true);
+        bf.set(component::tag_t<T>(), true);
     }
 
     template<class T1, class T2, class... Rest>
     static void fillBitflag(bitflag& bf) {
-        if (bf.size() <= Tag<T1>()) {
-            bf.resize(Tag<T1>() + 1);
+        if (bf.size() <= component::tag_t<T1>()) {
+            bf.resize(component::tag_t<T1>() + 1);
         }
-        bf.set(Tag<T1>(), true);
+        bf.set(component::tag_t<T1>(), true);
         fillBitflag<T2, Rest...>(bf);
     }
 
@@ -151,4 +149,4 @@ private:
     mutable std::mutex mAccessMutex;
     mutable std::mutex mSubscriptionsMutex;
 };
-} //
+} // namespace async_ecs

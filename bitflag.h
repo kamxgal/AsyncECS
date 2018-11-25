@@ -21,7 +21,7 @@ struct bitflag
     size_t size() const;
     void resize(size_t size);
     size_t enabled_flags_count() const;
-    bool operator&(const bitflag& rhs) const;
+    bool has(const bitflag& rhs) const;
 	bitflag operator!() const;
 
 	std::string str() const {
