@@ -17,9 +17,9 @@ struct entity
     bool has(component_tag t) const;
     bool has(const bitflag& bf) const;
     std::vector<component_const_ptr> get(const bitflag& bf) const;
-    bool insert(component_tag tag, component_ptr comp);
+    bool insert(component_ptr comp);
     bool remove(component_tag tag);
-    bool update(component_tag tag, component_ptr comp);
+    bool update(component_ptr comp);
 
     template<class... Ts>
     std::vector<component_const_ptr> get() const {

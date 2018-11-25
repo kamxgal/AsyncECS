@@ -22,10 +22,10 @@ TEST(RegistryShould, CreateAndUpdateComponentsAndCollectView)
 	auto intC2 = std::make_shared<IntComponent>();
 	intC2->number = 20;
 
-	reg.insert(e1, strC1->tag(), strC1);
-	reg.insert(e1, intC1->tag(), intC1);
-	reg.insert(e2, strC2->tag(), strC2);
-	reg.insert(e2, intC2->tag(), intC2);
+	reg.insert(e1, strC1);
+	reg.insert(e1, intC1);
+	reg.insert(e2, strC2);
+	reg.insert(e2, intC2);
 
 	auto myView = reg.select<StringComponent>();
 	EXPECT_EQ(strC1->name, myView.select<StringComponent>(e1)->name);
@@ -42,8 +42,8 @@ TEST(RegistryShould, CreateAndUpdateComponentsAndCollectView)
 	auto strC1_faulty_update = myView2.select<StringComponent>(e1)->clone();
 	std::static_pointer_cast<StringComponent>(strC1_faulty_update)->name = "XXXXXXXXXXX";
 
-	ASSERT_TRUE(reg.update(e1, strC1_update->tag(), strC1_update));
-	ASSERT_FALSE(reg.update(e1, strC1_faulty_update->tag(), strC1_faulty_update));
+	ASSERT_TRUE(reg.update(e1, strC1_update));
+	ASSERT_FALSE(reg.update(e1, strC1_faulty_update));
 
 	auto myView3 = reg.select<StringComponent, IntComponent>();
 	EXPECT_EQ(intC1->number, myView3.select<IntComponent>(e1)->number);
@@ -60,7 +60,7 @@ TEST(RegistryShould, GetSingleComponentWithoutView)
 
 	auto strC1 = std::make_shared<StringComponent>();
 	strC1->name = "AAA";
-	reg.insert(e, strC1->tag(), strC1);
+	reg.insert(e, strC1);
 
 	EXPECT_EQ(reg.select<StringComponent>(e)->name, strC1->name);
 }
@@ -72,7 +72,7 @@ TEST(RegistryShould, SubscribeForUpdateAndGetNotification)
 
 	auto strC1 = std::make_shared<StringComponent>();
 	strC1->name = "AAA";
-	reg.insert(e, strC1->tag(), strC1);
+	reg.insert(e, strC1);
 
 	auto myView = reg.select<StringComponent>();
 	auto comp = myView.select<StringComponent>(myView.entities().front());
@@ -85,7 +85,7 @@ TEST(RegistryShould, SubscribeForUpdateAndGetNotification)
 		isUpdateNotifReceived = true;
 	});
 
-	reg.update(e, update->tag(), update);
+	reg.update(e, update);
 
 	EXPECT_TRUE(isUpdateNotifReceived);
 }

@@ -16,7 +16,7 @@ entity_id registry::createEntity()
     return nextAvailableEntityId++;
 }
 
-bool registry::insert(entity_id id, component_tag tag, component_ptr c)
+bool registry::insert(entity_id id, component_ptr c)
 {
     mAccessMutex.lock();
     auto iter = mEntities.find(id);
@@ -27,10 +27,10 @@ bool registry::insert(entity_id id, component_tag tag, component_ptr c)
     auto e = iter->second;
     mAccessMutex.unlock();
 
-    return e->insert(tag, c);
+    return e->insert(c);
 }
 
-bool registry::update(entity_id id, component_tag tag, component_ptr c)
+bool registry::update(entity_id id, component_ptr c)
 {
     mAccessMutex.lock();
     auto iter = mEntities.find(id);
@@ -41,9 +41,9 @@ bool registry::update(entity_id id, component_tag tag, component_ptr c)
     auto e = iter->second;
     mAccessMutex.unlock();
 
-    bool result = e->update(tag, c);
+    bool result = e->update(c);
 	if (result) {
-		handleSubscription(id, tag, c);
+		handleSubscription(id, c);
 	}
 
     return result;
@@ -78,7 +78,7 @@ void registry::addSubscription(std::shared_ptr<registry::Subscription> s)
     mSubscriptions.emplace(std::make_pair(mNextAvailableSubscriptionId++, s));
 }
 
-void registry::handleSubscription(entity_id id, component_tag tag, component_ptr c)
+void registry::handleSubscription(entity_id id, component_ptr c)
 {
     std::unique_lock<std::mutex> lock(mSubscriptionsMutex);
     auto copy = mSubscriptions;
@@ -87,7 +87,7 @@ void registry::handleSubscription(entity_id id, component_tag tag, component_ptr
     for (auto iter = copy.begin(); iter != copy.end(); ++iter)
     {
         auto& s = iter->second;
-        s->handle(id, tag, c);
+        s->handle(id, c);
     }
 }
 

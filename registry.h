@@ -15,8 +15,8 @@ namespace async_ecs
 struct registry
 {
     entity_id createEntity();
-    bool insert(entity_id, component_tag, component_ptr);
-    bool update(entity_id, component_tag, component_ptr);
+    bool insert(entity_id, component_ptr);
+    bool update(entity_id, component_ptr);
     bool remove(entity_id, component_tag);
     bool remove(entity_id);
 
@@ -63,7 +63,7 @@ struct registry
     struct Subscription
     {
         virtual bool accepts(component_tag tag) const = 0;
-        virtual void handle(entity_id id, component_tag tag, component_const_ptr c) const = 0;
+        virtual void handle(entity_id id, component_const_ptr c) const = 0;
     };
 
     template<class T>
@@ -80,8 +80,8 @@ struct registry
         {}
 
         bool accepts(component_tag tag) const override { return tag == component::tag_t<T>(); }
-        void handle(entity_id id, component_tag tag, component_const_ptr c) const {
-            if ( tag != component::tag_t<T>()) {
+        void handle(entity_id id, component_const_ptr c) const {
+            if ( c->tag() != component::tag_t<T>()) {
                 return;
             }
 
@@ -138,7 +138,7 @@ private:
 
     void addSubscription(std::shared_ptr<Subscription> s);
 
-    void handleSubscription(entity_id id, component_tag tag, component_ptr c);
+    void handleSubscription(entity_id id, component_ptr c);
 
 private:
     using subscription_id = size_t;

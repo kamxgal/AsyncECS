@@ -45,27 +45,25 @@ std::vector<component_const_ptr> entity::get(const bitflag &bf) const
     return result;
 }
 
-bool entity::insert(component_tag tag, component_ptr comp)
+bool entity::insert(component_ptr comp)
 {
     entity_id myId = id();
-	component_tag tmp = comp->tag();
-	component_tag tmp2 = tag;
 	size_t s = mBitflag.size();
     std::unique_lock<std::mutex> lock(mMutex);
     if (mBitflag.size() <= comp->tag()) {
-        mBitflag.resize(tag+1);
-        mResources.resize(tag+1);
+        mBitflag.resize(comp->tag()+1);
+        mResources.resize(comp->tag() +1);
     }
 
 	size_t s2 = mBitflag.size();
 	size_t s3 = mResources.size();
 
-    if (mBitflag.at(tag)) {
+    if (mBitflag.at(comp->tag())) {
         return false;
     }
 
-    mResources[tag] = comp;
-    mBitflag.set(tag, true);
+    mResources[comp->tag()] = comp;
+    mBitflag.set(comp->tag(), true);
     return true;
 }
 
@@ -84,21 +82,21 @@ bool entity::remove(component_tag tag)
     return true;
 }
 
-bool entity::update(component_tag tag, component_ptr comp)
+bool entity::update(component_ptr comp)
 {
     std::unique_lock<std::mutex> lock(mMutex);
-    if (mBitflag.size() <= tag) {
+    if (mBitflag.size() <= comp->tag()) {
         return false;
     }
-    if (!mBitflag.at(tag)) {
+    if (!mBitflag.at(comp->tag())) {
         return false;
     }
-    if (comp->mRevision != mResources.at(tag)->mRevision) {
+    if (comp->mRevision != mResources.at(comp->tag())->mRevision) {
         return false;
     }
 
     ++comp->mRevision;
-    mResources[tag] = comp;
+    mResources[comp->tag()] = comp;
     return true;
 }
 } // namespace async_ecs
