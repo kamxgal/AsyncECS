@@ -31,6 +31,7 @@ bool entity::has(const bitflag &bf) const
 
 std::vector<component_const_ptr> entity::get(const bitflag &bf) const
 {
+	assert(bf.size() <= mBitflag.size());
     std::vector<component_const_ptr> result;
     mMutex.lock();
     auto resources = mResources;
@@ -38,7 +39,7 @@ std::vector<component_const_ptr> entity::get(const bitflag &bf) const
 
     for (size_t i=0; i<bf.size(); ++i)
     {
-        if (bf.at(i) && mBitflag.at(i)) {
+        if (bf.at(i)) {
             result.push_back(resources.at(i));
         }
     }

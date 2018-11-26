@@ -38,9 +38,9 @@ TEST(RegistryShould, CreateAndUpdateComponentsAndCollectView)
 	EXPECT_EQ(strC2->name, myView2.select<StringComponent>(e2)->name);
 
 	auto strC1_update = myView2.select<StringComponent>(e1)->clone();
-	std::static_pointer_cast<StringComponent>(strC1_update)->name = "UPDATED";
+	strC1_update->name = "UPDATED";
 	auto strC1_faulty_update = myView2.select<StringComponent>(e1)->clone();
-	std::static_pointer_cast<StringComponent>(strC1_faulty_update)->name = "XXXXXXXXXXX";
+	strC1_faulty_update->name = "XXXXXXXXXXX";
 
 	ASSERT_TRUE(reg.update(e1, strC1_update));
 	ASSERT_FALSE(reg.update(e1, strC1_faulty_update));
@@ -48,8 +48,7 @@ TEST(RegistryShould, CreateAndUpdateComponentsAndCollectView)
 	auto myView3 = reg.select<StringComponent, IntComponent>();
 	EXPECT_EQ(intC1->number, myView3.select<IntComponent>(e1)->number);
 	EXPECT_EQ(intC2->number, myView3.select<IntComponent>(e2)->number);
-	EXPECT_EQ(std::static_pointer_cast<StringComponent>(strC1_update)->name,
-		myView3.select<StringComponent>(e1)->name);
+	EXPECT_EQ(strC1_update->name, myView3.select<StringComponent>(e1)->name);
 	EXPECT_EQ(strC2->name, myView3.select<StringComponent>(e2)->name);
 }
 
@@ -76,7 +75,7 @@ TEST(RegistryShould, SubscribeForUpdateAndGetNotification)
 
 	auto myView = reg.select<StringComponent>();
 	auto comp = myView.select<StringComponent>(myView.entities().front());
-	auto update = std::static_pointer_cast<StringComponent>(comp->clone());
+	auto update = comp->clone();
 	update->name = "UPDATE";
 
 

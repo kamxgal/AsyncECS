@@ -19,7 +19,7 @@ TEST(EntityShould, GetComponentOfGivenTag)
 	async_ecs::entity e(0);
 	e.insert(intComp);
 
-	bitflag bf(3);
+	bitflag bf(async_ecs::component::tag_t<IntComponent>() + 1);
 	bf.set(async_ecs::component::tag_t<IntComponent>(), true);
 	auto vec1 = e.get(bf);
 	auto vec2 = e.get(bf);
@@ -33,7 +33,7 @@ TEST(EntityShould, UpdateComponent)
 	async_ecs::entity e(0);
 	e.insert(intComp);
 
-	bitflag bf(3);
+	bitflag bf(async_ecs::component::tag_t<IntComponent>() + 1);
 	bf.set(async_ecs::component::tag_t<IntComponent>(), true);
 	auto vec = e.get(bf);
 	ASSERT_EQ(1, vec.size());
@@ -56,7 +56,7 @@ TEST(EntityShould, NotAcceptUpdateRequestIfComponentWasAlreadyUpdatedByAnotherCl
 	async_ecs::entity e(0);
 	e.insert(intComp);
 
-	bitflag bf(3);
+	bitflag bf(async_ecs::component::tag_t<IntComponent>() + 1);
 	bf.set(async_ecs::component::tag_t<IntComponent>(), true);
 
 	// simulating client 1
