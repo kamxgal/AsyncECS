@@ -2,7 +2,10 @@ project(ecs_testing)
 
 find_package(Threads REQUIRED)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -pthread")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(TEST_FILES
     bitflagTests.cpp

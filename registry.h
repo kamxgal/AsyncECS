@@ -9,6 +9,7 @@
 
 #include "entity.h"
 #include "view.h"
+#include "notification.h"
 
 namespace async_ecs
 {
@@ -62,15 +63,14 @@ struct registry
 
     struct Subscription
     {
-        virtual bool accepts(component_tag tag) const = 0;
-        virtual void handle(entity_id id, component_const_ptr c) const = 0;
+        virtual void handle(operation_t operation, entity_id id, component_const_ptr c) const = 0;
     };
 
     template<class T>
-    using SubscriptionNotifFunc = std::function<void(entity_id, std::shared_ptr<const T>)>;
+    using SubscriptionNotifFunc = std::function<void(const Notification<T>&)>;
 
     template<class T>
-    using PreconditionFunc = std::function<bool(entity_id, std::shared_ptr<const T>)>;
+    using PreconditionFunc = std::function<bool(const Notification<T>&)>;
 
     template<class T>
     struct SubscriptionVariant : public Subscription
@@ -79,15 +79,19 @@ struct registry
             : callback(cb), precondition(prec)
         {}
 
-        bool accepts(component_tag tag) const override { return tag == component::tag_t<T>(); }
-        void handle(entity_id id, component_const_ptr c) const {
-            if ( c->tag() != component::tag_t<T>()) {
+        void handle(operation_t operation, entity_id id, component_const_ptr c) const {
+            if ( c->tag() != component::tag_t<T>() ) {
                 return;
             }
 
-            std::shared_ptr<const T> comp = std::static_pointer_cast<const T>(c);
-            if (precondition(id, comp)) {
-                callback(id, comp);
+			Notification<T> notification {
+				operation,
+				id,
+				std::static_pointer_cast<const T>(c)
+			};
+
+            if (precondition(notification)) {
+                callback(notification);
             }
         }
         SubscriptionNotifFunc<T> callback;
@@ -96,8 +100,9 @@ struct registry
 
     template<class T>
     void subscribe(SubscriptionNotifFunc<T> callback,
-        PreconditionFunc<T> precondition = [](entity_id, std::shared_ptr<const T>) -> bool { return true; })
+        PreconditionFunc<T> precondition = [](const Notification<T>&) -> bool { return true; })
     {
+		static_assert( !std::is_same<async_ecs::entity, T>::value );
         addSubscription(std::make_shared<SubscriptionVariant<T>>(callback, precondition));
     }
 
@@ -138,7 +143,7 @@ private:
 
     void addSubscription(std::shared_ptr<Subscription> s);
 
-    void handleSubscription(entity_id id, component_ptr c);
+    void handleSubscription(operation_t operation, entity_id id, component_ptr c);
 
 private:
     using subscription_id = size_t;

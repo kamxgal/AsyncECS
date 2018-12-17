@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include <registry.h>
 
@@ -78,9 +79,8 @@ TEST(RegistryShould, SubscribeForUpdateAndGetNotification)
 	auto update = comp->clone();
 	update->name = "UPDATE";
 
-
 	bool isUpdateNotifReceived = false;
-	reg.subscribe<StringComponent>([&isUpdateNotifReceived](entity_id, std::shared_ptr<const StringComponent>) {
+	reg.subscribe<StringComponent>([&isUpdateNotifReceived](const Notification<StringComponent>&) {
 		isUpdateNotifReceived = true;
 	});
 

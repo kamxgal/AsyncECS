@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(AsyncECS C CXX)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -pthread")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(FILES
     bitflag.h
@@ -11,6 +14,7 @@ set(FILES
     component.h
     component.cpp
     view.h
+    notification.h
     registry.h
     registry.cpp
 )

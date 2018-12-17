@@ -43,7 +43,7 @@ bool registry::update(entity_id id, component_ptr c)
 
     bool result = e->update(c);
 	if (result) {
-		handleSubscription(id, c);
+		handleSubscription(operation_t::updated, id, c);
 	}
 
     return result;
@@ -78,7 +78,7 @@ void registry::addSubscription(std::shared_ptr<registry::Subscription> s)
     mSubscriptions.emplace(std::make_pair(mNextAvailableSubscriptionId++, s));
 }
 
-void registry::handleSubscription(entity_id id, component_ptr c)
+void registry::handleSubscription(operation_t operation, entity_id id, component_ptr c)
 {
     std::unique_lock<std::mutex> lock(mSubscriptionsMutex);
     auto copy = mSubscriptions;
@@ -87,7 +87,7 @@ void registry::handleSubscription(entity_id id, component_ptr c)
     for (auto iter = copy.begin(); iter != copy.end(); ++iter)
     {
         auto& s = iter->second;
-        s->handle(id, c);
+        s->handle(operation, id, c);
     }
 }
 
