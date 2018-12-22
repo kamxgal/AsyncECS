@@ -82,9 +82,35 @@ TEST(RegistryShould, SubscribeForUpdateAndGetNotification)
 	bool isUpdateNotifReceived = false;
 	reg.subscribe<StringComponent>([&isUpdateNotifReceived](const Notification<StringComponent>&) {
 		isUpdateNotifReceived = true;
+	}, [e](const Notification<StringComponent>& notif) -> bool {
+		return notif.operation == operation_t::updated
+			&& notif.component != nullptr
+			&& notif.entityId == e;
 	});
 
 	reg.update(e, update);
 
 	EXPECT_TRUE(isUpdateNotifReceived);
+}
+
+TEST(RegistryShould, SubscribeForInsertAndGetNotification)
+{
+	registry reg;
+	entity_id e = reg.createEntity();
+
+	auto strC1 = std::make_shared<StringComponent>();
+	strC1->name = "AAA";
+
+	bool isInsertNotifReceived = false;
+	reg.subscribe<StringComponent>([&isInsertNotifReceived](const Notification<StringComponent>&) {
+		isInsertNotifReceived = true;
+	}, [e](const Notification<StringComponent>& notif) -> bool {
+		return notif.operation == operation_t::inserted
+			&& notif.component != nullptr
+			&& notif.entityId == e;
+	});
+
+	reg.insert(e, strC1);
+
+	EXPECT_TRUE(isInsertNotifReceived);
 }

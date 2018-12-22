@@ -27,7 +27,12 @@ bool registry::insert(entity_id id, component_ptr c)
     auto e = iter->second;
     mAccessMutex.unlock();
 
-    return e->insert(c);
+    bool result = e->insert(c);
+	if (result) {
+		handleSubscription(operation_t::inserted, id, c);
+	}
+
+	return result;
 }
 
 bool registry::update(entity_id id, component_ptr c)
