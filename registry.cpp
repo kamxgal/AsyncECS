@@ -93,7 +93,7 @@ void registry::addSubscription(std::shared_ptr<registry::Subscription> s)
     mSubscriptions.emplace(std::make_pair(mNextAvailableSubscriptionId++, s));
 }
 
-void registry::handleSubscriptions(operation_t operation, entity_id id, component_ptr c)
+void registry::handleSubscriptions(operation_t operation, entity_id id, component_const_ptr c) const
 {
     std::unique_lock<std::mutex> lock(mSubscriptionsMutex);
     auto copy = mSubscriptions;

@@ -55,19 +55,50 @@ struct registry
     template<class T>
     std::shared_ptr<const T> select(entity_id id) const
     {
-        mAccessMutex.lock();
-        auto iter = mEntities.find(id);
-        if (iter == mEntities.end()) {
-            mAccessMutex.unlock();
-            return nullptr;
-        }
-        const auto e = iter->second;
-        mAccessMutex.unlock();
-        if (!e->has(component::tag_t<T>())) {
-            return nullptr;
-        }
-        return std::static_pointer_cast<const T>(e->get<T>().front());
+		mAccessMutex.lock();
+		auto iter = mEntities.find(id);
+		if (iter == mEntities.end()) {
+			mAccessMutex.unlock();
+			return nullptr;
+		}
+		const auto e = iter->second;
+		mAccessMutex.unlock();
+		if (!e->has(component::tag_t<T>())) {
+			return nullptr;
+		}
+		return std::static_pointer_cast<const T>(e->get<T>().front());
     }
+
+	// synchronization should be guaranteed by a user
+	// see: finish_unsafe_update
+	template<class T>
+	std::shared_ptr<T> select_unsafely(entity_id id) const
+	{
+		return std::const_pointer_cast<T>(select<T>(id));
+	}
+
+	// should be called by a user when update granted by
+	// select_unsafely method is done and the user wants to
+	// notify subscribers about that
+	template<class T>
+	void finish_unsafe_update(entity_id id) const
+	{
+		mAccessMutex.lock();
+		auto iter = mEntities.find(id);
+		if (iter == mEntities.end()) {
+			return;
+		}
+
+		auto e = iter->second;
+		auto c = e->get<T>().front();
+		mAccessMutex.unlock();
+
+		if (c == nullptr) {
+			return;
+		}
+
+		handleSubscriptions(operation_t::updated, id, c);
+	}
 
     struct Subscription
     {
@@ -169,7 +200,7 @@ private:
     }
 
     void addSubscription(std::shared_ptr<Subscription> s);
-    void handleSubscriptions(operation_t operation, entity_id id, component_ptr c);
+    void handleSubscriptions(operation_t operation, entity_id id, component_const_ptr c) const;
     void handleRemovalSubscriptions(entity_id id, component_tag tag);
     void handleSubscriptionsOnEntityRemoval(entity_id id, const bitflag& bf);
 
