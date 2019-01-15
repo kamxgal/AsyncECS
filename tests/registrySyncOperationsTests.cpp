@@ -114,3 +114,49 @@ TEST(RegistryShould, SubscribeForInsertAndGetNotification)
 
 	EXPECT_TRUE(isInsertNotifReceived);
 }
+
+TEST(RegistryShould, SubscribeForRemovalAndGetNotification)
+{
+	registry reg;
+	entity_id e = reg.createEntity();
+
+	auto strC1 = std::make_shared<StringComponent>();
+	strC1->name = "AAA";
+	reg.insert(e, strC1);
+
+	bool isRemovedNotifReceived = false;
+	reg.subscribe<StringComponent>([&isRemovedNotifReceived](const Notification<StringComponent>&) {
+		isRemovedNotifReceived = true;
+	}, [e](const Notification<StringComponent>& notif) -> bool {
+		return notif.operation == operation_t::removed
+			&& notif.entityId == e
+			&& notif.component == nullptr;
+	});
+
+	reg.remove<StringComponent>(e);
+
+	EXPECT_TRUE(isRemovedNotifReceived);
+}
+
+TEST(RegistryShould, SubscribeForRemovalAndGetNotificationWhenEntityIsRemoved)
+{
+	registry reg;
+	entity_id e = reg.createEntity();
+
+	auto strC1 = std::make_shared<StringComponent>();
+	strC1->name = "AAA";
+	reg.insert(e, strC1);
+
+	bool isRemovedNotifReceived = false;
+	reg.subscribe<StringComponent>([&isRemovedNotifReceived](const Notification<StringComponent>&) {
+		isRemovedNotifReceived = true;
+	}, [e](const Notification<StringComponent>& notif) -> bool {
+		return notif.operation == operation_t::removed
+			&& notif.entityId == e
+			&& notif.component == nullptr;
+	});
+
+	reg.remove(e);
+
+	EXPECT_TRUE(isRemovedNotifReceived);
+}

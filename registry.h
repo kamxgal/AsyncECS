@@ -18,8 +18,16 @@ struct registry
     entity_id createEntity();
     bool insert(entity_id, component_ptr);
     bool update(entity_id, component_ptr);
-    bool remove(entity_id, component_tag);
     bool remove(entity_id);
+
+    template<class T>
+    bool remove(entity_id eid) {
+        bool result = remove(eid, component::tag_t<T>());
+        if (result) {
+            handleRemovalSubscriptions(eid, component::tag_t<T>());
+        }
+        return result;
+    };
 
     template<class... Ts>
     view<Ts...> select() const {
@@ -64,6 +72,7 @@ struct registry
     struct Subscription
     {
         virtual void handle(operation_t operation, entity_id id, component_const_ptr c) const = 0;
+        virtual void handle_removal(entity_id id, component_tag tag) const = 0;
     };
 
     template<class T>
@@ -84,16 +93,33 @@ struct registry
                 return;
             }
 
-			Notification<T> notification {
-				operation,
-				id,
-				std::static_pointer_cast<const T>(c)
-			};
+            Notification<T> notification {
+                operation,
+                id,
+                std::static_pointer_cast<const T>(c)
+            };
 
             if (precondition(notification)) {
                 callback(notification);
             }
         }
+
+        void handle_removal(entity_id id, component_tag tag) const {
+            if (tag != component::tag_t<T>()) {
+                return;
+            }
+
+            Notification<T> notification{
+                operation_t::removed,
+                id,
+                nullptr
+            };
+
+            if (precondition(notification)) {
+                callback(notification);
+            }
+        }
+
         SubscriptionNotifFunc<T> callback;
         PreconditionFunc<T> precondition;
     };
@@ -102,7 +128,8 @@ struct registry
     void subscribe(SubscriptionNotifFunc<T> callback,
         PreconditionFunc<T> precondition = [](const Notification<T>&) -> bool { return true; })
     {
-		static_assert( !std::is_same<async_ecs::entity, T>::value );
+        static_assert( !std::is_same<async_ecs::entity, T>::value );
+        static_assert( std::is_base_of<async_ecs::component, T>::value );
         addSubscription(std::make_shared<SubscriptionVariant<T>>(callback, precondition));
     }
 
@@ -142,8 +169,11 @@ private:
     }
 
     void addSubscription(std::shared_ptr<Subscription> s);
+    void handleSubscriptions(operation_t operation, entity_id id, component_ptr c);
+    void handleRemovalSubscriptions(entity_id id, component_tag tag);
+    void handleSubscriptionsOnEntityRemoval(entity_id id, const bitflag& bf);
 
-    void handleSubscription(operation_t operation, entity_id id, component_ptr c);
+    bool remove(entity_id, component_tag);
 
 private:
     using subscription_id = size_t;

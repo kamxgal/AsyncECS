@@ -20,6 +20,7 @@ struct entity
     bool insert(component_ptr comp);
     bool remove(component_tag tag);
     bool update(component_ptr comp);
+	const bitflag& get_bitflag() { return mBitflag; }
 
     template<class... Ts>
     std::vector<component_const_ptr> get() const {

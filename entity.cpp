@@ -56,9 +56,6 @@ bool entity::insert(component_ptr comp)
         mResources.resize(comp->tag() +1);
     }
 
-	size_t s2 = mBitflag.size();
-	size_t s3 = mResources.size();
-
     if (mBitflag.at(comp->tag())) {
         return false;
     }

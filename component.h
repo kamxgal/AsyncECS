@@ -33,7 +33,7 @@ public:
 			return;
 		}
 		RegisteredComponents<T>::is_registered = true;
-		RegisteredComponents<T>::tag = mNextAvailableTag++;
+		RegisteredComponents<T>::tag = ++mNextAvailableTag;
 		RegisteredComponents<const T>::is_registered = true;
 		RegisteredComponents<const T>::tag = mNextAvailableTag;
 	}

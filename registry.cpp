@@ -29,7 +29,7 @@ bool registry::insert(entity_id id, component_ptr c)
 
     bool result = e->insert(c);
 	if (result) {
-		handleSubscription(operation_t::inserted, id, c);
+		handleSubscriptions(operation_t::inserted, id, c);
 	}
 
 	return result;
@@ -48,7 +48,7 @@ bool registry::update(entity_id id, component_ptr c)
 
     bool result = e->update(c);
 	if (result) {
-		handleSubscription(operation_t::updated, id, c);
+		handleSubscriptions(operation_t::updated, id, c);
 	}
 
     return result;
@@ -72,9 +72,19 @@ bool registry::remove(entity_id id)
 {
     std::unique_lock<std::mutex> lock(mAccessMutex);
     auto iter = mEntities.find(id);
-    bool isRemoved = iter != mEntities.end();
+    bool isNotExisting = iter == mEntities.end();
+
+	if (isNotExisting) {
+		return false;
+	}
+
+	bitflag bf = iter->second->get_bitflag();
     mEntities.erase(iter);
-    return isRemoved;
+	lock.unlock();
+
+	handleSubscriptionsOnEntityRemoval(id, bf);
+
+    return true;
 }
 
 void registry::addSubscription(std::shared_ptr<registry::Subscription> s)
@@ -83,7 +93,7 @@ void registry::addSubscription(std::shared_ptr<registry::Subscription> s)
     mSubscriptions.emplace(std::make_pair(mNextAvailableSubscriptionId++, s));
 }
 
-void registry::handleSubscription(operation_t operation, entity_id id, component_ptr c)
+void registry::handleSubscriptions(operation_t operation, entity_id id, component_ptr c)
 {
     std::unique_lock<std::mutex> lock(mSubscriptionsMutex);
     auto copy = mSubscriptions;
@@ -94,6 +104,42 @@ void registry::handleSubscription(operation_t operation, entity_id id, component
         auto& s = iter->second;
         s->handle(operation, id, c);
     }
+}
+
+void registry::handleRemovalSubscriptions(entity_id id, component_tag tag)
+{
+	std::unique_lock<std::mutex> lock(mSubscriptionsMutex);
+	auto copy = mSubscriptions;
+	lock.unlock();
+
+	for (auto iter = copy.begin(); iter != copy.end(); ++iter)
+	{
+		auto& s = iter->second;
+		s->handle_removal(id, tag);
+	}
+}
+
+void registry::handleSubscriptionsOnEntityRemoval(entity_id id, const bitflag& bf)
+{
+	if (bf.enabled_flags_count() == 0) {
+		return;
+	}
+
+	std::unique_lock<std::mutex> lock(mSubscriptionsMutex);
+	auto copy = mSubscriptions;
+	lock.unlock();
+
+	for (size_t tag = 0; tag < bf.size(); ++tag) {
+		if (!bf.at(tag)) {
+			continue;
+		}
+
+		for (auto iter = copy.begin(); iter != copy.end(); ++iter)
+		{
+			auto& s = iter->second;
+			s->handle_removal(id, tag);
+		}
+	}
 }
 
 } //
