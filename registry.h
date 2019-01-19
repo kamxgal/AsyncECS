@@ -155,13 +155,15 @@ struct registry
         PreconditionFunc<T> precondition;
     };
 
+	using Unsubscriber = std::function<void()>;
+
     template<class T>
-    void subscribe(SubscriptionNotifFunc<T> callback,
+	Unsubscriber subscribe(SubscriptionNotifFunc<T> callback,
         PreconditionFunc<T> precondition = [](const Notification<T>&) -> bool { return true; })
     {
         static_assert( !std::is_same<async_ecs::entity, T>::value );
         static_assert( std::is_base_of<async_ecs::component, T>::value );
-        addSubscription(std::make_shared<SubscriptionVariant<T>>(callback, precondition));
+        return addSubscription(std::make_shared<SubscriptionVariant<T>>(callback, precondition));
     }
 
 private:
@@ -199,16 +201,17 @@ private:
         collectData<T2, Rest...>(entity, components);
     }
 
-    void addSubscription(std::shared_ptr<Subscription> s);
+	Unsubscriber addSubscription(std::shared_ptr<Subscription> s);
     void handleSubscriptions(operation_t operation, entity_id id, component_const_ptr c) const;
     void handleRemovalSubscriptions(entity_id id, component_tag tag);
     void handleSubscriptionsOnEntityRemoval(entity_id id, const bitflag& bf);
 
     bool remove(entity_id, component_tag);
 
-private:
-    using subscription_id = size_t;
+	using subscription_id = size_t;
+	void removeSubscription(subscription_id);
 
+private:
     subscription_id mNextAvailableSubscriptionId = 0;
     std::map<entity_id, std::shared_ptr<entity>> mEntities;
     std::map<subscription_id, std::shared_ptr<Subscription>> mSubscriptions;

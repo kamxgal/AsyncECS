@@ -68,6 +68,12 @@ bool registry::remove(entity_id id, component_tag tag)
     return e->remove(tag);
 }
 
+void registry::removeSubscription(subscription_id id)
+{
+	std::unique_lock<std::mutex> lock(mSubscriptionsMutex);
+	mSubscriptions.erase(id);
+}
+
 bool registry::remove(entity_id id)
 {
     std::unique_lock<std::mutex> lock(mAccessMutex);
@@ -87,10 +93,14 @@ bool registry::remove(entity_id id)
     return true;
 }
 
-void registry::addSubscription(std::shared_ptr<registry::Subscription> s)
+registry::Unsubscriber registry::addSubscription(std::shared_ptr<registry::Subscription> s)
 {
     std::unique_lock<std::mutex> lock(mSubscriptionsMutex);
-    mSubscriptions.emplace(std::make_pair(mNextAvailableSubscriptionId++, s));
+	auto subscriptionId = mNextAvailableSubscriptionId++;
+    auto result = mSubscriptions.emplace(std::make_pair(subscriptionId, s));
+	return [subscriptionId, this]() {
+		removeSubscription(subscriptionId);
+	};
 }
 
 void registry::handleSubscriptions(operation_t operation, entity_id id, component_const_ptr c) const

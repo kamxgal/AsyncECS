@@ -192,3 +192,28 @@ TEST(RegistryShould, GiveUnsafeAccessToComponentAndNotifyUpdateOnTriggerFromUser
 
 	EXPECT_TRUE(isUpdateNotifReceived);
 }
+
+TEST(RegistryShould, SubscribeAndUnsubscribe)
+{
+	registry reg;
+	entity_id e = reg.createEntity();
+
+	auto strC1 = std::make_shared<StringComponent>();
+	strC1->name = "AAA";
+	reg.insert(e, strC1);
+
+	bool isRemovedNotifReceived = false;
+	auto unsubscribe = reg.subscribe<StringComponent>([&isRemovedNotifReceived](const Notification<StringComponent>&) {
+		isRemovedNotifReceived = true;
+	}, [e](const Notification<StringComponent>& notif) -> bool {
+		return notif.operation == operation_t::removed
+			&& notif.entityId == e
+			&& notif.component == nullptr;
+	});
+
+	unsubscribe();
+
+	reg.remove<StringComponent>(e);
+
+	EXPECT_FALSE(isRemovedNotifReceived);
+}
