@@ -37,16 +37,13 @@ struct registry
         std::vector<entity_id> entities;
         std::vector<component_const_ptr> components;
 
-        mAccessMutex.lock();
-        auto copy = mEntities;
-        mAccessMutex.unlock();
-
-        for (auto iter = copy.begin(); iter != copy.end(); ++iter)
+        auto clones = cloneEntities();
+        for (auto iter = clones.begin(); iter != clones.end(); ++iter)
         {
-            auto ptr = iter->second;
-            if (!ptr->has(bf)) continue;
+            const auto& e = iter->second;
+            if (!e.has(bf)) continue;
             entities.push_back(iter->first);
-            collectData<Ts...>(ptr, components);
+            collectData<Ts...>(e, components);
         }
 
         return view<Ts...>(std::move(entities), std::move(components));
@@ -61,12 +58,12 @@ struct registry
 			mAccessMutex.unlock();
 			return nullptr;
 		}
-		const auto e = iter->second;
+		const auto e = *iter->second;
 		mAccessMutex.unlock();
-		if (!e->has(component::tag_t<T>())) {
+		if (!e.has(component::tag_t<T>())) {
 			return nullptr;
 		}
-		return std::static_pointer_cast<const T>(e->get<T>().front());
+		return std::static_pointer_cast<const T>(e.get<T>().front());
     }
 
 	// synchronization should be guaranteed by a user
@@ -185,21 +182,23 @@ private:
     }
 
     template<class T>
-    void collectData(std::shared_ptr<entity> entity,
+    void collectData(const entity& entity,
         std::vector<component_const_ptr>& components) const
     {
-        auto vec = entity->get<T>();
+        auto vec = entity.get<T>();
         components.insert(components.end(), vec.begin(), vec.end());
     }
 
     template<class T1, class T2, class... Rest>
-    void collectData(std::shared_ptr<entity> entity,
+    void collectData(const entity& entity,
         std::vector<component_const_ptr>& components) const
     {
-        auto vec = entity->get<T1>();
+        auto vec = entity.get<T1>();
         components.insert(components.end(), vec.begin(), vec.end());
         collectData<T2, Rest...>(entity, components);
     }
+
+	std::map<entity_id, entity> cloneEntities() const;
 
 	Unsubscriber addSubscription(std::shared_ptr<Subscription> s);
     void handleSubscriptions(operation_t operation, entity_id id, component_const_ptr c) const;

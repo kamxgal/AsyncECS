@@ -93,6 +93,18 @@ bool registry::remove(entity_id id)
     return true;
 }
 
+std::map<entity_id, entity> registry::cloneEntities() const
+{
+	std::map<entity_id, entity> clones;
+	mAccessMutex.lock();
+	for (auto it = mEntities.cbegin(); it != mEntities.end(); ++it)
+	{
+		clones.emplace(it->first, entity(*it->second));
+	}
+	mAccessMutex.unlock();
+	return clones;
+}
+
 registry::Unsubscriber registry::addSubscription(std::shared_ptr<registry::Subscription> s)
 {
     std::unique_lock<std::mutex> lock(mSubscriptionsMutex);
