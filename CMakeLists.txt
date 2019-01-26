@@ -17,6 +17,8 @@ set(FILES
     notification.h
     registry.h
     registry.cpp
+    reactive_system.h
+    reactive_system.cpp
 )
 
 add_subdirectory(3rd_party)

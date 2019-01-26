@@ -16,6 +16,7 @@ namespace async_ecs
 struct registry
 {
     entity_id createEntity();
+
     bool insert(entity_id, component_ptr);
     bool update(entity_id, component_ptr);
     bool remove(entity_id);
