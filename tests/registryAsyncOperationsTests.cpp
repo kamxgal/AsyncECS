@@ -18,9 +18,9 @@ struct AsyncInsertIntComponent : public command
     void execute() override {
         auto intComponent = mRegistry.select<IntComponent>(eId);
         if (!intComponent) {
-            auto newIntComponent = std::make_shared<IntComponent>();
-            newIntComponent->number = 999;
-            mRegistry.insert(eId, newIntComponent);
+            IntComponent newIntComponent;
+            newIntComponent.number = 999;
+            mRegistry.insert(eId, std::move(newIntComponent));
         }
     }
     registry& mRegistry;
@@ -94,10 +94,10 @@ TEST(RegistryShould, HandleReactiveSystemRequestToInsertIntComponentOnStringComp
     system.start();
 
     entity_id eid = reg.createEntity();
-    auto stringComponent = std::make_shared<StringComponent>();
-    stringComponent->name = "AAA";
+    StringComponent stringComponent;
+    stringComponent.name = "AAA";
 
-    reg.insert(eid, stringComponent);
+    reg.insert(eid, std::move(stringComponent));
 
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
@@ -116,14 +116,14 @@ TEST(RegistryShould, HandleReactiveSystemRequestToUpdateIntComponentOnStringComp
     entity_id eid = reg.createEntity();
 
     {
-        auto stringComponent = std::make_shared<StringComponent>();
-        stringComponent->name = "AAA";
-        reg.insert(eid, stringComponent);
-        auto intComponent = std::make_shared<IntComponent>();
-        intComponent->number = 999;
-        reg.insert(eid, intComponent);
+        StringComponent stringComponent;
+        stringComponent.name = "AAA";
+        reg.insert(eid, std::move(stringComponent));
+        IntComponent intComponent;
+        intComponent.number = 999;
+        reg.insert(eid, std::move(intComponent));
 
-        auto updated = stringComponent->clone();
+        auto updated = stringComponent.clone();
         updated->name = "12345";
         reg.update(eid, updated);
     }

@@ -13,30 +13,30 @@ TEST(RegistryShould, CreateAndUpdateComponentsAndCollectView)
 	entity_id e1 = reg.createEntity();
 	entity_id e2 = reg.createEntity();
 
-	auto strC1 = std::make_shared<StringComponent>();
-	strC1->name = "AAA";
-	auto strC2 = std::make_shared<StringComponent>();
-	strC2->name = "BBB";
+    StringComponent strC1;
+	strC1.name = "AAA";
+    StringComponent strC2;
+	strC2.name = "BBB";
 
-	auto intC1 = std::make_shared<IntComponent>();
-	intC1->number = 10;
-	auto intC2 = std::make_shared<IntComponent>();
-	intC2->number = 20;
+    IntComponent intC1;
+	intC1.number = 10;
+    IntComponent intC2;
+	intC2.number = 20;
 
-	reg.insert(e1, strC1);
-	reg.insert(e1, intC1);
-	reg.insert(e2, strC2);
-	reg.insert(e2, intC2);
-
+	reg.insert(e1, StringComponent(strC1));
+	reg.insert(e1, IntComponent(intC1));
+	reg.insert(e2, StringComponent(strC2));
+	reg.insert(e2, IntComponent(intC2));
+    
 	auto myView = reg.select<StringComponent>();
-	EXPECT_EQ(strC1->name, myView.select<StringComponent>(e1)->name);
-	EXPECT_EQ(strC2->name, myView.select<StringComponent>(e2)->name);
+	EXPECT_EQ(strC1.name, myView.select<StringComponent>(e1)->name);
+	EXPECT_EQ(strC2.name, myView.select<StringComponent>(e2)->name);
 
 	auto myView2 = reg.select<StringComponent, IntComponent>();
-	EXPECT_EQ(intC1->number, myView2.select<IntComponent>(e1)->number);
-	EXPECT_EQ(intC2->number, myView2.select<IntComponent>(e2)->number);
-	EXPECT_EQ(strC1->name, myView2.select<StringComponent>(e1)->name);
-	EXPECT_EQ(strC2->name, myView2.select<StringComponent>(e2)->name);
+	EXPECT_EQ(intC1.number, myView2.select<IntComponent>(e1)->number);
+	EXPECT_EQ(intC2.number, myView2.select<IntComponent>(e2)->number);
+	EXPECT_EQ(strC1.name, myView2.select<StringComponent>(e1)->name);
+	EXPECT_EQ(strC2.name, myView2.select<StringComponent>(e2)->name);
 
 	auto strC1_update = myView2.select<StringComponent>(e1)->clone();
 	strC1_update->name = "UPDATED";
@@ -47,10 +47,10 @@ TEST(RegistryShould, CreateAndUpdateComponentsAndCollectView)
 	ASSERT_FALSE(reg.update(e1, strC1_faulty_update));
 
 	auto myView3 = reg.select<StringComponent, IntComponent>();
-	EXPECT_EQ(intC1->number, myView3.select<IntComponent>(e1)->number);
-	EXPECT_EQ(intC2->number, myView3.select<IntComponent>(e2)->number);
+	EXPECT_EQ(intC1.number, myView3.select<IntComponent>(e1)->number);
+	EXPECT_EQ(intC2.number, myView3.select<IntComponent>(e2)->number);
 	EXPECT_EQ(strC1_update->name, myView3.select<StringComponent>(e1)->name);
-	EXPECT_EQ(strC2->name, myView3.select<StringComponent>(e2)->name);
+	EXPECT_EQ(strC2.name, myView3.select<StringComponent>(e2)->name);
 }
 
 TEST(RegistryShould, GetSingleComponentWithoutView)
@@ -58,11 +58,11 @@ TEST(RegistryShould, GetSingleComponentWithoutView)
 	registry reg;
 	entity_id e = reg.createEntity();
 
-	auto strC1 = std::make_shared<StringComponent>();
-	strC1->name = "AAA";
-	reg.insert(e, strC1);
+    StringComponent strC1;
+	strC1.name = "AAA";
+	reg.insert(e, StringComponent(strC1));
 
-	EXPECT_EQ(reg.select<StringComponent>(e)->name, strC1->name);
+	EXPECT_EQ(reg.select<StringComponent>(e)->name, strC1.name);
 }
 
 TEST(RegistryShould, SubscribeForUpdateAndGetNotification)
@@ -70,9 +70,9 @@ TEST(RegistryShould, SubscribeForUpdateAndGetNotification)
 	registry reg;
 	entity_id e = reg.createEntity();
 
-	auto strC1 = std::make_shared<StringComponent>();
-	strC1->name = "AAA";
-	reg.insert(e, strC1);
+    StringComponent strC1;
+	strC1.name = "AAA";
+	reg.insert(e, std::move(strC1));
 
 	auto myView = reg.select<StringComponent>();
 	auto comp = myView.select<StringComponent>(myView.entities().front());
@@ -98,8 +98,8 @@ TEST(RegistryShould, SubscribeForInsertAndGetNotification)
 	registry reg;
 	entity_id e = reg.createEntity();
 
-	auto strC1 = std::make_shared<StringComponent>();
-	strC1->name = "AAA";
+    StringComponent strC1;
+	strC1.name = "AAA";
 
 	bool isInsertNotifReceived = false;
 	reg.subscribe<StringComponent>([&isInsertNotifReceived](const Notification<StringComponent>&) {
@@ -110,7 +110,7 @@ TEST(RegistryShould, SubscribeForInsertAndGetNotification)
 			&& notif.entityId == e;
 	});
 
-	reg.insert(e, strC1);
+	reg.insert(e, std::move(strC1));
 
 	EXPECT_TRUE(isInsertNotifReceived);
 }
@@ -120,9 +120,9 @@ TEST(RegistryShould, SubscribeForRemovalAndGetNotification)
 	registry reg;
 	entity_id e = reg.createEntity();
 
-	auto strC1 = std::make_shared<StringComponent>();
-	strC1->name = "AAA";
-	reg.insert(e, strC1);
+    StringComponent strC1;
+	strC1.name = "AAA";
+	reg.insert(e, std::move(strC1));
 
 	bool isRemovedNotifReceived = false;
 	reg.subscribe<StringComponent>([&isRemovedNotifReceived](const Notification<StringComponent>&) {
@@ -143,9 +143,9 @@ TEST(RegistryShould, SubscribeForRemovalAndGetNotificationWhenEntityIsRemoved)
 	registry reg;
 	entity_id e = reg.createEntity();
 
-	auto strC1 = std::make_shared<StringComponent>();
-	strC1->name = "AAA";
-	reg.insert(e, strC1);
+    StringComponent strC1;
+	strC1.name = "AAA";
+	reg.insert(e, std::move(strC1));
 
 	bool isRemovedNotifReceived = false;
 	reg.subscribe<StringComponent>([&isRemovedNotifReceived](const Notification<StringComponent>&) {
@@ -170,9 +170,9 @@ TEST(RegistryShould, GiveUnsafeAccessToComponentAndNotifyUpdateOnTriggerFromUser
 	const std::string SECOND_NAME = "BBB";
 
 	{
-		auto strC1 = std::make_shared<StringComponent>();
-		strC1->name = FIRST_NAME;
-		reg.insert(e, strC1);
+        StringComponent strC1;
+		strC1.name = FIRST_NAME;
+		reg.insert(e, std::move(strC1));
 	}
 
 	auto cc = reg.select_unsafely<StringComponent>(e);
@@ -198,9 +198,9 @@ TEST(RegistryShould, SubscribeAndUnsubscribe)
 	registry reg;
 	entity_id e = reg.createEntity();
 
-	auto strC1 = std::make_shared<StringComponent>();
-	strC1->name = "AAA";
-	reg.insert(e, strC1);
+    StringComponent strC1;
+	strC1.name = "AAA";
+	reg.insert(e, std::move(strC1));
 
 	bool isRemovedNotifReceived = false;
 	auto unsubscribe = reg.subscribe<StringComponent>([&isRemovedNotifReceived](const Notification<StringComponent>&) {

@@ -16,7 +16,7 @@ entity_id registry::createEntity()
     return nextAvailableEntityId++;
 }
 
-bool registry::insert(entity_id id, component_ptr c)
+bool registry::insertComponent(entity_id id, component_ptr c)
 {
     mAccessMutex.lock();
     auto iter = mEntities.find(id);
