@@ -17,13 +17,18 @@ struct registry
 {
     entity_id createEntity();
 
-    bool update(entity_id, component_ptr);
     bool remove(entity_id);
 
     template<class T>
     bool insert(entity_id eid, T&& component) {
         std::shared_ptr<T> cptr = std::make_shared<T>(std::move(component));
         return insertComponent(eid, cptr);
+    }
+
+    template<class T>
+    bool update(entity_id eid, T&& component) {
+        std::shared_ptr<T> cptr = std::make_shared<T>(std::move(component));
+        return updateComponent(eid, cptr);
     }
 
     template<class T>
@@ -73,7 +78,7 @@ struct registry
     }
 
 	// synchronization should be guaranteed by a user
-	// see: finish_unsafe_update
+	// @see: finish_unsafe_update
 	template<class T>
 	std::shared_ptr<T> select_unsafely(entity_id id) const
 	{
@@ -207,6 +212,7 @@ private:
 	std::map<entity_id, entity> cloneEntities() const;
 
     bool insertComponent(entity_id, component_ptr);
+    bool updateComponent(entity_id, component_ptr);
 	Unsubscriber addSubscription(std::shared_ptr<Subscription> s);
     void handleSubscriptions(operation_t operation, entity_id id, component_const_ptr c) const;
     void handleRemovalSubscriptions(entity_id id, component_tag tag);

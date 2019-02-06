@@ -39,17 +39,17 @@ TEST(RegistryShould, CreateAndUpdateComponentsAndCollectView)
 	EXPECT_EQ(strC2.name, myView2.select<StringComponent>(e2)->name);
 
 	auto strC1_update = myView2.select<StringComponent>(e1)->clone();
-	strC1_update->name = "UPDATED";
+	strC1_update.name = "UPDATED";
 	auto strC1_faulty_update = myView2.select<StringComponent>(e1)->clone();
-	strC1_faulty_update->name = "XXXXXXXXXXX";
+	strC1_faulty_update.name = "XXXXXXXXXXX";
 
-	ASSERT_TRUE(reg.update(e1, strC1_update));
-	ASSERT_FALSE(reg.update(e1, strC1_faulty_update));
+	ASSERT_TRUE(reg.update(e1, StringComponent(strC1_update)));
+	ASSERT_FALSE(reg.update(e1, StringComponent(strC1_faulty_update)));
 
 	auto myView3 = reg.select<StringComponent, IntComponent>();
 	EXPECT_EQ(intC1.number, myView3.select<IntComponent>(e1)->number);
 	EXPECT_EQ(intC2.number, myView3.select<IntComponent>(e2)->number);
-	EXPECT_EQ(strC1_update->name, myView3.select<StringComponent>(e1)->name);
+	EXPECT_EQ(strC1_update.name, myView3.select<StringComponent>(e1)->name);
 	EXPECT_EQ(strC2.name, myView3.select<StringComponent>(e2)->name);
 }
 
@@ -77,7 +77,7 @@ TEST(RegistryShould, SubscribeForUpdateAndGetNotification)
 	auto myView = reg.select<StringComponent>();
 	auto comp = myView.select<StringComponent>(myView.entities().front());
 	auto update = comp->clone();
-	update->name = "UPDATE";
+	update.name = "UPDATE";
 
 	bool isUpdateNotifReceived = false;
 	reg.subscribe<StringComponent>([&isUpdateNotifReceived](const Notification<StringComponent>&) {
@@ -88,7 +88,7 @@ TEST(RegistryShould, SubscribeForUpdateAndGetNotification)
 			&& notif.entityId == e;
 	});
 
-	reg.update(e, update);
+	reg.update(e, std::move(update));
 
 	EXPECT_TRUE(isUpdateNotifReceived);
 }

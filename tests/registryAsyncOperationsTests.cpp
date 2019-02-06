@@ -37,8 +37,8 @@ struct AsyncUpdateIntComponent : public command
         auto intComponent = mRegistry.select<IntComponent>(eId);
         if (intComponent) {
             auto updated = intComponent->clone();
-            updated->number = atoi(toConvert.c_str());
-            mRegistry.update(eId, updated);
+            updated.number = atoi(toConvert.c_str());
+            mRegistry.update(eId, std::move(updated));
         }
     }
     registry& mRegistry;
@@ -124,8 +124,8 @@ TEST(RegistryShould, HandleReactiveSystemRequestToUpdateIntComponentOnStringComp
         reg.insert(eid, std::move(intComponent));
 
         auto updated = stringComponent.clone();
-        updated->name = "12345";
-        reg.update(eid, updated);
+        updated.name = "12345";
+        reg.update(eid, std::move(updated));
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(10));

@@ -38,10 +38,10 @@ TEST(EntityShould, UpdateComponent)
 	auto vec = e.get(bf);
 	ASSERT_EQ(1, vec.size());
 
-	auto clone = std::static_pointer_cast<IntComponent>(vec.front()->clone());
-	clone->number = 10;
+	auto clone = std::static_pointer_cast<const IntComponent>(vec.front())->clone();
+	clone.number = 10;
 
-	ASSERT_TRUE(e.update(clone));
+	ASSERT_TRUE(e.update(std::make_shared<IntComponent>(std::move(clone))));
 
 	auto updatedVec = e.get(bf);
 	ASSERT_EQ(1, updatedVec.size());
@@ -62,19 +62,19 @@ TEST(EntityShould, NotAcceptUpdateRequestIfComponentWasAlreadyUpdatedByAnotherCl
 	// simulating client 1
 	auto vec1 = e.get(bf);
 	ASSERT_EQ(1, vec1.size());
-	auto updated1 = std::static_pointer_cast<IntComponent>(vec1.front()->clone());
-	updated1->number = 10;
+	auto updated1 = std::static_pointer_cast<const IntComponent>(vec1.front())->clone();
+	updated1.number = 10;
 
 	// simulating client 2
 	auto vec2 = e.get(bf);
 	ASSERT_EQ(1, vec2.size());
-	auto updated2 = std::static_pointer_cast<IntComponent>(vec2.front()->clone());
-	updated2->number = 20;
+	auto updated2 = std::static_pointer_cast<const IntComponent>(vec2.front())->clone();
+	updated2.number = 20;
 
-	ASSERT_TRUE(e.update(updated1));
+	ASSERT_TRUE(e.update(std::make_shared<IntComponent>(std::move(updated1))));
 	// second update reqest is not handled because updated2 is created based on the same
 	// "version" of component as updated1
-	ASSERT_FALSE(e.update(updated2));
+	ASSERT_FALSE(e.update(std::make_shared<IntComponent>(std::move(updated2))));
 }
 
 TEST(EntityShould, InsertAndRemoveComponent)

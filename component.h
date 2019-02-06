@@ -40,12 +40,6 @@ public:
 
 	virtual component_tag tag() const = 0;
 
-private:
-	virtual component_ptr doClone() const = 0;
-
-public:
-	component_ptr clone() const { return doClone(); }
-
 protected:
     void clone_private_data(component_ptr c) const;
 private:
@@ -65,15 +59,9 @@ NAME() { \
 async_ecs::component_tag tag() const override { \
 	return component::tag_t<NAME>(); \
 } \
-private: \
-async_ecs::component_ptr doClone() const override { \
-		async_ecs::component_ptr cloned = std::make_shared<NAME>(*this); \
-		async_ecs::component::clone_private_data(cloned); \
-		return cloned; \
-} \
 public: \
-std::shared_ptr<NAME> clone() const { \
-	return std::static_pointer_cast<NAME>(doClone()); \
+NAME clone() const { \
+	return *this; \
 }
 
 }  // namespace async_ecs

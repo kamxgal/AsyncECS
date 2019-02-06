@@ -35,7 +35,7 @@ bool registry::insertComponent(entity_id id, component_ptr c)
 	return result;
 }
 
-bool registry::update(entity_id id, component_ptr c)
+bool registry::updateComponent(entity_id id, component_ptr c)
 {
     mAccessMutex.lock();
     auto iter = mEntities.find(id);
