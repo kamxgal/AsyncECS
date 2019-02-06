@@ -48,4 +48,16 @@ private:
 private:
     std::shared_ptr<reactive_system_data> mData;
 };
+
+struct stop : public command
+{
+    stop(reactive_system& sys) : sys(sys) {}
+    void execute() override {
+        sys.stop();
+    }
+    
+private:
+    reactive_system& sys;
+};
+
 } // namespace async_ecs

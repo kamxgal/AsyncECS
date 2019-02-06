@@ -134,3 +134,54 @@ TEST(RegistryShould, HandleReactiveSystemRequestToUpdateIntComponentOnStringComp
     ASSERT_NE(nullptr, intComponent);
     EXPECT_EQ(12345, intComponent->number);
 }
+
+struct IntComponentUpdater : public reactive_system
+{
+    IntComponentUpdater(registry& reg, entity_id eid) : mRegistry(reg), eid(eid) {
+    }
+
+    void initialize() {
+        struct update : public command {
+            update(registry& r, entity_id eid) : r(r), eid(eid) {}
+            void execute() override {
+                while (!is_stopped)
+                {
+                    auto c = r.select<IntComponent>(eid)->clone();
+                    if (c.number >= 10000) {
+                        return;
+                    }
+                    ++c.number;
+                    bool res = r.update(eid, std::move(c));
+                }
+            }
+            registry& r;
+            entity_id eid;
+        };
+
+        add_task(std::make_unique<update>(mRegistry, eid));
+        add_task(std::make_unique<async_ecs::stop>(*this));
+    }
+
+    registry& mRegistry;
+    entity_id eid;
+};
+
+TEST(RegistryShould, HandleTwoAsyncSystemsUpdatingTheSameComponentAtOnce)
+{
+    registry reg;
+    entity_id ee = reg.createEntity();
+    IntComponent intComponent;
+    intComponent.number = 0;
+    reg.insert(ee, std::move(intComponent));
+
+    IntComponentUpdater updater1(reg, ee);
+    IntComponentUpdater updater2(reg, ee);
+    updater1.initialize();
+    updater2.initialize();
+    // there might be drops in updating but at the end both updaters should finish their work
+    updater1.start();
+    updater2.start();
+    updater1.join();
+    updater2.join();
+    EXPECT_EQ(10000, reg.select<IntComponent>(ee)->number);
+}
