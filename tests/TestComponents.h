@@ -1,14 +1,14 @@
 #pragma once
 #include <component.h>
 
-struct StringComponent : async_ecs::component
+struct StringComponent : ecs::component
 {
 	ECS_COMPONENT(StringComponent)
 	
 	std::string name;
 };
 
-struct IntComponent : async_ecs::component
+struct IntComponent : ecs::component
 {
 	ECS_COMPONENT(IntComponent)
 

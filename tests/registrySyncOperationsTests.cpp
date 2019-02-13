@@ -5,7 +5,7 @@
 
 #include "TestComponents.h"
 
-using namespace async_ecs;
+using namespace ecs;
 
 TEST(RegistryShould, CreateAndUpdateComponentsAndCollectView)
 {

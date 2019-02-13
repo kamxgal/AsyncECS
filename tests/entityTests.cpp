@@ -7,20 +7,20 @@
 TEST(EntityShould, HaveComponentAfterInsert)
 {
 	std::shared_ptr<IntComponent> intComp = std::make_shared<IntComponent>();
-	async_ecs::entity e(0);
-	ASSERT_TRUE(!e.has(async_ecs::component::tag_t<IntComponent>()));
+	ecs::entity e(0);
+	ASSERT_TRUE(!e.has(ecs::component::tag_t<IntComponent>()));
 	e.insert(intComp);
-	ASSERT_TRUE(e.has(async_ecs::component::tag_t<IntComponent>()));
+	ASSERT_TRUE(e.has(ecs::component::tag_t<IntComponent>()));
 }
 
 TEST(EntityShould, GetComponentOfGivenTag)
 {
 	std::shared_ptr<IntComponent> intComp = std::make_shared<IntComponent>();
-	async_ecs::entity e(0);
+	ecs::entity e(0);
 	e.insert(intComp);
 
-	bitflag bf(async_ecs::component::tag_t<IntComponent>() + 1);
-	bf.set(async_ecs::component::tag_t<IntComponent>(), true);
+	bitflag bf(ecs::component::tag_t<IntComponent>() + 1);
+	bf.set(ecs::component::tag_t<IntComponent>(), true);
 	auto vec1 = e.get(bf);
 	auto vec2 = e.get(bf);
 	ASSERT_EQ(1, vec1.size());
@@ -30,11 +30,11 @@ TEST(EntityShould, GetComponentOfGivenTag)
 TEST(EntityShould, UpdateComponent)
 {
 	std::shared_ptr<IntComponent> intComp = std::make_shared<IntComponent>();
-	async_ecs::entity e(0);
+	ecs::entity e(0);
 	e.insert(intComp);
 
-	bitflag bf(async_ecs::component::tag_t<IntComponent>() + 1);
-	bf.set(async_ecs::component::tag_t<IntComponent>(), true);
+	bitflag bf(ecs::component::tag_t<IntComponent>() + 1);
+	bf.set(ecs::component::tag_t<IntComponent>(), true);
 	auto vec = e.get(bf);
 	ASSERT_EQ(1, vec.size());
 
@@ -53,11 +53,11 @@ TEST(EntityShould, UpdateComponent)
 TEST(EntityShould, NotAcceptUpdateRequestIfComponentWasAlreadyUpdatedByAnotherClient)
 {
 	std::shared_ptr<IntComponent> intComp = std::make_shared<IntComponent>();
-	async_ecs::entity e(0);
+	ecs::entity e(0);
 	e.insert(intComp);
 
-	bitflag bf(async_ecs::component::tag_t<IntComponent>() + 1);
-	bf.set(async_ecs::component::tag_t<IntComponent>(), true);
+	bitflag bf(ecs::component::tag_t<IntComponent>() + 1);
+	bf.set(ecs::component::tag_t<IntComponent>(), true);
 
 	// simulating client 1
 	auto vec1 = e.get(bf);
@@ -80,10 +80,10 @@ TEST(EntityShould, NotAcceptUpdateRequestIfComponentWasAlreadyUpdatedByAnotherCl
 TEST(EntityShould, InsertAndRemoveComponent)
 {
 	std::shared_ptr<IntComponent> intComp = std::make_shared<IntComponent>();
-	async_ecs::entity e(0);
-	ASSERT_FALSE(e.has(async_ecs::component::tag_t<IntComponent>()));
+	ecs::entity e(0);
+	ASSERT_FALSE(e.has(ecs::component::tag_t<IntComponent>()));
 	e.insert(intComp);
-	ASSERT_TRUE(e.has(async_ecs::component::tag_t<IntComponent>()));
-	ASSERT_TRUE(e.remove(async_ecs::component::tag_t<IntComponent>()));
-	ASSERT_FALSE(e.has(async_ecs::component::tag_t<IntComponent>()));
+	ASSERT_TRUE(e.has(ecs::component::tag_t<IntComponent>()));
+	ASSERT_TRUE(e.remove(ecs::component::tag_t<IntComponent>()));
+	ASSERT_FALSE(e.has(ecs::component::tag_t<IntComponent>()));
 }

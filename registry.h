@@ -11,7 +11,7 @@
 #include "view.h"
 #include "notification.h"
 
-namespace async_ecs
+namespace ecs
 {
 struct registry
 {
@@ -169,8 +169,8 @@ struct registry
 	Unsubscriber subscribe(SubscriptionNotifFunc<T> callback,
         PreconditionFunc<T> precondition = [](const Notification<T>&) -> bool { return true; })
     {
-        static_assert( !std::is_same<async_ecs::entity, T>::value );
-        static_assert( std::is_base_of<async_ecs::component, T>::value );
+        static_assert( !std::is_same<ecs::entity, T>::value );
+        static_assert( std::is_base_of<ecs::component, T>::value );
         return addSubscription(std::make_shared<SubscriptionVariant<T>>(callback, precondition));
     }
 
@@ -230,4 +230,4 @@ private:
     mutable std::mutex mAccessMutex;
     mutable std::mutex mSubscriptionsMutex;
 };
-} // namespace async_ecs
+} // namespace ecs

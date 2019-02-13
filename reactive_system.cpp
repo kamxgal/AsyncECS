@@ -5,7 +5,7 @@
 #include <queue>
 #include <atomic>
 
-namespace async_ecs
+namespace ecs
 {
 struct reactive_system::reactive_system_data
 {

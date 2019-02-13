@@ -4,7 +4,7 @@
 #include <memory>
 #include <atomic>
 
-namespace async_ecs
+namespace ecs
 {
 
 struct command
@@ -60,4 +60,4 @@ private:
     reactive_system& sys;
 };
 
-} // namespace async_ecs
+} // namespace ecs

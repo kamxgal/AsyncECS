@@ -1,6 +1,6 @@
 #include "entity.h"
 
-namespace async_ecs
+namespace ecs
 {
 entity::entity(entity_id id) : mId(id), mBitflag(0)
 {
@@ -97,4 +97,4 @@ bool entity::update(component_ptr comp)
     mResources[comp->tag()] = comp;
     return true;
 }
-} // namespace async_ecs
+} // namespace ecs

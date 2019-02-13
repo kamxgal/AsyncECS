@@ -7,7 +7,7 @@
 
 #include <reactive_system.h>
 
-using namespace async_ecs;
+using namespace ecs;
 
 struct AsyncInsertIntComponent : public command
 {
@@ -159,7 +159,7 @@ struct IntComponentUpdater : public reactive_system
         };
 
         add_task(std::make_unique<update>(mRegistry, eid));
-        add_task(std::make_unique<async_ecs::stop>(*this));
+        add_task(std::make_unique<ecs::stop>(*this));
     }
 
     registry& mRegistry;

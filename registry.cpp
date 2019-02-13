@@ -2,10 +2,10 @@
 
 namespace
 {
-async_ecs::entity_id nextAvailableEntityId = 0;
+ecs::entity_id nextAvailableEntityId = 0;
 }
 
-namespace async_ecs
+namespace ecs
 {
 
 entity_id registry::createEntity()

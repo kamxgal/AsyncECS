@@ -28,13 +28,13 @@ struct ViewShould : public ::testing::Test
 			components = { strComp1, intComp1, strComp2, intComp2, strComp3, intComp3 };
 	}
 
-	std::vector<async_ecs::entity_id> entities;
-	std::vector<async_ecs::component_const_ptr> components;
+	std::vector<ecs::entity_id> entities;
+	std::vector<ecs::component_const_ptr> components;
 };
 
 TEST_F(ViewShould, BeCreatedAndHandleGetRequests)
 {
-	async_ecs::view<StringComponent, IntComponent> myView(std::move(entities), std::move(components));
+	ecs::view<StringComponent, IntComponent> myView(std::move(entities), std::move(components));
 
 	ASSERT_NE(nullptr, myView.select<IntComponent>(4));
 	EXPECT_EQ(10, myView.select<IntComponent>(4)->number);
@@ -54,7 +54,7 @@ TEST_F(ViewShould, BeCreatedAndHandleGetRequests)
 
 TEST_F(ViewShould, BeCreatedAndHandleSelectRequestWithPredicate)
 {
-	async_ecs::view<StringComponent, IntComponent> myView(std::move(entities), std::move(components));
+	ecs::view<StringComponent, IntComponent> myView(std::move(entities), std::move(components));
 
 	auto mapOfFounds = myView.select<IntComponent>([](auto& ptr) {
 		return ptr->number < 15 || ptr->number > 25;

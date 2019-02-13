@@ -5,7 +5,7 @@
 #include "bitflag.h"
 #include "component.h"
 
-namespace async_ecs
+namespace ecs
 {
 using entity_id = size_t;
 struct entity

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace async_ecs
+namespace ecs
 {
 
 using entity_id = size_t;
@@ -21,4 +21,4 @@ struct Notification
 	entity_id entityId;
 	std::shared_ptr<const T> component; // nullptr for "removed" operation
 };
-} // namespace async_ecs
+} // namespace ecs

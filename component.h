@@ -2,7 +2,7 @@
 
 #include <memory>
 
-namespace async_ecs
+namespace ecs
 {
 struct component;
 using component_tag = unsigned int;
@@ -56,7 +56,7 @@ NAME() { \
     component::register_t<NAME>(); \
 } \
 ~NAME() override = default; \
-async_ecs::component_tag tag() const override { \
+ecs::component_tag tag() const override { \
 	return component::tag_t<NAME>(); \
 } \
 public: \
@@ -64,4 +64,4 @@ NAME clone() const { \
 	return *this; \
 }
 
-}  // namespace async_ecs
+}  // namespace ecs
