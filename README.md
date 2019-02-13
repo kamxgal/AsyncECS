@@ -59,3 +59,12 @@ Components can be removed from an entity in a similar way as in previous example
 ```
 bool result = database.remove<MyComponent>(entityId);
 ```
+
+## Selecting more than one component at a time
+We can select more than one component at a time:
+```
+ecs::view<Component1, Component2, Component3> myView = database.select<Component1, Component2, Component3>();
+// or more convenient syntax:
+auto myView2 = database.select<Component1, Component2, Component3>();
+```
+Each entity is checked if it has all the components listed in the select method. If so then we will have access to all of them from the view's interface. Creating a view is linear in the size of entities and constant in the size of components.
