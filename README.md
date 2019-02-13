@@ -46,7 +46,8 @@ std::shared_ptr<const MyComponent> myComponent = database.select<MyComponent>(en
 > ```
 > auto myComponent = database.select<MyComponent>(entityId);
 > ```
-How to update the component, then? A regular approach, synchronized by the database itself, forbids to modify a registered component directly in database. At first we have to create a copy of it, then modify its content and finally update it:
+Finding a proper component has logarithmic complexity in the size of entities and constant in the size of components per entity.
+How to update components? A regular approach forbids to modify a registered component directly in database. At first we have to get component from the database, then create a copy of it, then modify its content and finally update it:
 ```
 auto myComponent = database.select<MyComponent>(entityId);
 MyComponent updated = myComponent->clone();
@@ -54,3 +55,7 @@ updated.mProperty1 = "Hello, Updated World!";
 database.update(entityId, updated);
 ```
 Components are versioned (they have their revisions written). If two asynchronous systems will try to write to the same component at the same time then only the first one will succed. Success or failure of an operation is indicated by the update method itself by returning a boolean value.
+Components can be removed from an entity in a similar way as in previous examples:
+```
+bool result = database.remove<MyComponent>(entityId);
+```
