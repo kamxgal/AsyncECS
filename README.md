@@ -67,4 +67,4 @@ ecs::view<Component1, Component2, Component3> myView = database.select<Component
 // or more convenient syntax:
 auto myView2 = database.select<Component1, Component2, Component3>();
 ```
-Each entity is checked if it has all the components listed in the select method. If so then we will have access to all of them from the view's interface. Creating a view is linear in the size of entities and constant in the size of components.
+Each entity is checked if it has all the components listed in the select method. If so then we will have access to all of them from the view's interface. Creating a view has linear complexity in the size of entities and constant in the size of components.
