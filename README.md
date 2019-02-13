@@ -54,7 +54,7 @@ MyComponent updated = myComponent->clone();
 updated.mProperty1 = "Hello, Updated World!";
 database.update(entityId, updated);
 ```
-Components are versioned (they have their revisions written). If two asynchronous systems will try to write to the same component at the same time then only the first one will succed. Success or failure of an operation is indicated by the update method itself by returning a boolean value.
+Components are versioned (they have their revisions defined). If two asynchronous systems will try to write to the same component at the same time then only the first one will succeed. Success or failure of an operation is indicated by the update method itself by returning a boolean value.
 Components can be removed from an entity in a similar way as in previous examples:
 ```
 bool result = database.remove<MyComponent>(entityId);
