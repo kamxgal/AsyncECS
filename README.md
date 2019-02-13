@@ -8,7 +8,7 @@ In order to start using the library a user has to create a top-level database ob
 // ...
 ecs::registry database;
 ```
-The registry class supports four most common operations names just like in SQL:
+The registry class supports four most common operations named just like in SQL:
 * insert
 * update
 * remove
