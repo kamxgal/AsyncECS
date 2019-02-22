@@ -61,10 +61,29 @@ bool result = database.remove<MyComponent>(entityId);
 ```
 
 ## Selecting more than one component at a time
-We can select more than one component at a time:
+We can select more than one component at a time by creating view:
 ```
 ecs::view<Component1, Component2, Component3> myView = database.select<Component1, Component2, Component3>();
 // or more convenient syntax:
 auto myView2 = database.select<Component1, Component2, Component3>();
 ```
 Each entity is checked if it has all the components listed in the select method. If so then we will have access to all of them from the view's interface. Creating a view has linear complexity in the size of entities and constant in the size of components.
+
+### Selecting single component from a view
+View provides access to information which entities it is related to. Based on that you can select chosen components from the view and access them via shared pointer to const struct. The complexity of such getter is constant.
+```
+std::vector<entity_id> ids = myView.entities();
+for (entity_id id : ids)
+{
+    auto component1 = myView.select<MyComponent1>(id);
+    auto component2 = myView.select<MyComponent2>(id);
+    // ...
+}
+```
+### Selecting components from multiple entities
+Once view is created user can perform additional selection of components of certain type with lambda expression which would check values of properties of a component. Example:
+```
+std::map<entity_id, std::shared_ptr<const MyComponent>> = myView.select<MyComponent>([](auto ptr) -> bool {
+    return ptr->mProperty1 == "Hello, World!";
+});
+```
