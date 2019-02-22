@@ -87,3 +87,4 @@ std::map<entity_id, std::shared_ptr<const MyComponent>> = myView.select<MyCompon
     return ptr->mProperty1 == "Hello, World!";
 });
 ```
+Complexity is linear in the size of entities, constant in the size of components stored by a view.
