@@ -88,3 +88,43 @@ std::map<entity_id, std::shared_ptr<const MyComponent>> = myView.select<MyCompon
 });
 ```
 Complexity is linear in the size of entities, constant in the size of components stored by a view.
+
+# Subscribing for changes in registry
+User is able to subscribe for changes in registry. Operations that are notified are:
+* insert
+* update
+* remove
+
+In order to subscribe a user has to provide callback for certain notification. Callback is called on a thread of an operation's caller.
+```
+registry.subscribe<MyComponent>([](const Notification<MyComponent>& notif) {
+    // do something
+});
+```
+
+Notification's properties are:
+* operation - type of operation
+* entityId - id of parent entity
+* component - shared pointer to related component (nullptr for "removed" operation)
+
+It is also possible to provide precondition function to check certain properties of a notification or updated component. For example user is able to subscribe only to update operations of component of MyComponent type:
+```
+registry.subscribe<MyComponent>([](const Notification<MyComponent>& notif) {
+    // do something
+}, [](const Notification<MyComponent>& notif) -> bool {
+    return notif.operation == operation_t::updated;
+});
+```
+## Unsubscribing
+The `registry.subscribe` returns a function to unsubscribe. Call it do deactivate subscription.
+```
+auto unsubscriber = registry.subscribe<MyComponent>([](const Notification<MyComponent>& notif) {
+    // do something
+});
+
+// ...
+// getting notifications
+// ...
+
+unsubscriber();
+```
