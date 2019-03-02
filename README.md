@@ -1,5 +1,7 @@
 # AsyncECS
-database based on entity-component with thread-safe access for asynchronous systems 
+AsyncECS is a library providing database based on entity-component-system design pattern and guarantees thread-safe access to stored components.
+
+It may be useful in desktop applications which have to, in the same time, handle subsequent requests from a user and make time consuming calculations in the background. 
 
 # Basic usage
 In order to start using the library a user has to create a top-level database object of type called `registry`.
