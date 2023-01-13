@@ -1,3 +1,26 @@
+/*
+ * MIT License
+ * Copyright (c) 2018 kamxgal Kamil Galant kamil.galant@gmail.com
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+*/
+
 #pragma once
 
 #include <list>
@@ -63,50 +86,50 @@ struct registry
     template<class T>
     std::shared_ptr<const T> select(entity_id id) const
     {
-		mAccessMutex.lock();
-		auto iter = mEntities.find(id);
-		if (iter == mEntities.end()) {
-			mAccessMutex.unlock();
-			return nullptr;
-		}
-		const auto e = *iter->second;
-		mAccessMutex.unlock();
-		if (!e.has(component::tag_t<T>())) {
-			return nullptr;
-		}
-		return std::static_pointer_cast<const T>(e.get<T>().front());
+        mAccessMutex.lock();
+        auto iter = mEntities.find(id);
+        if (iter == mEntities.end()) {
+            mAccessMutex.unlock();
+            return nullptr;
+        }
+        const auto e = *iter->second;
+        mAccessMutex.unlock();
+        if (!e.has(component::tag_t<T>())) {
+            return nullptr;
+        }
+        return std::static_pointer_cast<const T>(e.get<T>().front());
     }
 
-	// synchronization should be guaranteed by a user
-	// @see: finish_unsafe_update
-	template<class T>
-	std::shared_ptr<T> select_unsafely(entity_id id) const
-	{
-		return std::const_pointer_cast<T>(select<T>(id));
-	}
+    // synchronization should be guaranteed by a user
+    // @see: finish_unsafe_update
+    template<class T>
+    std::shared_ptr<T> select_unsafely(entity_id id) const
+    {
+        return std::const_pointer_cast<T>(select<T>(id));
+    }
 
-	// should be called by a user when update granted by
-	// select_unsafely method is done and the user wants to
-	// notify subscribers about that
-	template<class T>
-	void finish_unsafe_update(entity_id id) const
-	{
-		mAccessMutex.lock();
-		auto iter = mEntities.find(id);
-		if (iter == mEntities.end()) {
-			return;
-		}
+    // should be called by a user when update granted by
+    // select_unsafely method is done and the user wants to
+    // notify subscribers about that
+    template<class T>
+    void finish_unsafe_update(entity_id id) const
+    {
+        mAccessMutex.lock();
+        auto iter = mEntities.find(id);
+        if (iter == mEntities.end()) {
+            return;
+        }
 
-		auto e = iter->second;
-		auto c = e->get<T>().front();
-		mAccessMutex.unlock();
+        auto e = iter->second;
+        auto c = e->get<T>().front();
+        mAccessMutex.unlock();
 
-		if (c == nullptr) {
-			return;
-		}
+        if (c == nullptr) {
+            return;
+        }
 
-		handleSubscriptions(operation_t::updated, id, c);
-	}
+        handleSubscriptions(operation_t::updated, id, c);
+    }
 
     struct Subscription
     {
@@ -163,10 +186,10 @@ struct registry
         PreconditionFunc<T> precondition;
     };
 
-	using Unsubscriber = std::function<void()>;
+    using Unsubscriber = std::function<void()>;
 
     template<class T>
-	Unsubscriber subscribe(SubscriptionNotifFunc<T> callback,
+    Unsubscriber subscribe(SubscriptionNotifFunc<T> callback,
         PreconditionFunc<T> precondition = [](const Notification<T>&) -> bool { return true; })
     {
         static_assert( !std::is_same<ecs::entity, T>::value );
@@ -209,19 +232,19 @@ private:
         collectData<T2, Rest...>(entity, components);
     }
 
-	std::map<entity_id, entity> cloneEntities() const;
+    std::map<entity_id, entity> cloneEntities() const;
 
     bool insertComponent(entity_id, component_ptr);
     bool updateComponent(entity_id, component_ptr);
-	Unsubscriber addSubscription(std::shared_ptr<Subscription> s);
+    Unsubscriber addSubscription(std::shared_ptr<Subscription> s);
     void handleSubscriptions(operation_t operation, entity_id id, component_const_ptr c) const;
     void handleRemovalSubscriptions(entity_id id, component_tag tag);
     void handleSubscriptionsOnEntityRemoval(entity_id id, const bitflag& bf);
 
     bool remove(entity_id, component_tag);
 
-	using subscription_id = size_t;
-	void removeSubscription(subscription_id);
+    using subscription_id = size_t;
+    void removeSubscription(subscription_id);
 
 private:
     subscription_id mNextAvailableSubscriptionId = 0;
