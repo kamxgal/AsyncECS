@@ -15,7 +15,7 @@ bitflag::bitflag(size_t size)
 {
     data->size = size;
     data->enabledFlagsCount = 0;
-    auto res = std::div(data->size, 8);
+    auto res = std::lldiv(data->size, 8);
     size_t bytes = res.quot;
     bytes += res.rem > 0 ? 1 : 0;
     data->bits = std::calloc(bytes, sizeof(char));
@@ -26,7 +26,7 @@ bitflag::bitflag(const bitflag& other)
 {
     data->size = other.data->size;
     data->enabledFlagsCount = other.data->enabledFlagsCount;
-    auto res = std::div(data->size, 8);
+    auto res = std::lldiv(data->size, 8);
     size_t bytes = res.quot;
     bytes += res.rem > 0 ? 1 : 0;
     data->bits = std::malloc(bytes);
@@ -40,15 +40,15 @@ bitflag::bitflag(bitflag&& other)
 
 bitflag::~bitflag()
 {
-	if (data) {
-		std::free(data->bits);
-	}
+    if (data) {
+        std::free(data->bits);
+    }
 }
 
 bool bitflag::at(size_t pos) const
 {
     assert(pos < data->size);
-    auto res = std::div(pos, 8);
+    auto res = std::lldiv(pos, 8);
     size_t byteOffset = res.quot;
     size_t restOffset = res.rem;
     char* byte = (char*)data->bits;
@@ -59,13 +59,13 @@ bool bitflag::at(size_t pos) const
 void bitflag::set(size_t pos, bool value)
 {
     assert(pos < data->size);
-    auto res = std::div(pos, 8);
+    auto res = std::lldiv(pos, 8);
     char* byte = (char*)data->bits;
     byte += res.quot;
-    switch (value)
-    {
-    case true: *byte |= (1 << res.rem); ++data->enabledFlagsCount; break;
-    case false: *byte &= ~(1 << res.rem); --data->enabledFlagsCount; break;
+    if (value) {
+        *byte |= (1 << res.rem); ++data->enabledFlagsCount;
+    } else {
+        *byte &= ~(1 << res.rem); --data->enabledFlagsCount;
     }
 }
 
@@ -73,16 +73,16 @@ size_t bitflag::size() const { return data->size; }
 
 void bitflag::resize(size_t size)
 {
-    auto res = std::div(size, 8);
+    auto res = std::lldiv(size, 8);
     size_t bytes = res.quot;
     bytes += res.rem > 0 ? 1 : 0;
     data->bits = realloc(data->bits, bytes);
-	size_t oldSize = data->size;
-	data->size = size;
-	for (size_t i=oldSize; i<size; ++i)
-	{
-		set(i, false);
-	}
+    size_t oldSize = data->size;
+    data->size = size;
+    for (size_t i=oldSize; i<size; ++i)
+    {
+        set(i, false);
+    }
 
 }
 
@@ -90,24 +90,24 @@ size_t bitflag::enabled_flags_count() const { return data->enabledFlagsCount; }
 
 bool bitflag::has(const bitflag& rhs) const
 {
-	if (data->size < rhs.data->size) {
-		return false;
-	}
+    if (data->size < rhs.data->size) {
+        return false;
+    }
 
     size_t bitsToCheck = std::min(data->size, rhs.data->size);
-    auto res = std::div(bitsToCheck, 8);
+    auto res = std::lldiv(bitsToCheck, 8);
     size_t bytes = res.quot;
     bytes += res.rem > 0 ? 1 : 0;
     char* byte = (char*)data->bits;
     char* rhsByte = (char*)rhs.data->bits;
     for (size_t i=0; i<bytes-1; ++i)
     {
-		if (bitsToCheck > 8) {
-			bitsToCheck -= 8;
-		}
-		else {
-			bitsToCheck = 0;
-		}
+        if (bitsToCheck > 8) {
+            bitsToCheck -= 8;
+        }
+        else {
+            bitsToCheck = 0;
+        }
 
         if (*byte == 0 && *rhsByte == 0)
         {
@@ -123,25 +123,25 @@ bool bitflag::has(const bitflag& rhs) const
         ++rhsByte;
     }
 
-	if (bitsToCheck == 0) {
-		return true;
-	}
+    if (bitsToCheck == 0) {
+        return true;
+    }
 
     char mask = 0;
     for (size_t i=0; i<bitsToCheck; ++i)
     {
         mask |= (1 << i);
     }
-	char val1 = *byte & mask;
-	char val2 = *rhsByte & mask;
+    char val1 = *byte & mask;
+    char val2 = *rhsByte & mask;
     return (val1 & val2) == val2;
 }
 
 bitflag bitflag::operator!() const
 {
-	bitflag res(*this);
-	for (size_t i = 0; i < res.size(); ++i) {
-		res.set(i, !res.at(i));
-	}
-	return res;
+    bitflag res(*this);
+    for (size_t i = 0; i < res.size(); ++i) {
+        res.set(i, !res.at(i));
+    }
+    return res;
 }
